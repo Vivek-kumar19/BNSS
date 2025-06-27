@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delhi Police - Missing Person Notice Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CSS CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Styles for the PDF Template (hidden) -->
+    <style>
+        /* These styles are specifically for the hidden #pdf-template element and will be used by html2canvas for PDF and by the Word export */
+        .hidden-pdf-template {
+            position: absolute;
+            left: -9999px; /* Hide off-screen */
+            width: 210mm; /* A4 width */
+            height: auto; /* Adjust height based on content */
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 13pt; /* Explicitly set font size to 13pt */
+            line-height: 1.0; /* Adjusted line-height for exact match */
+            box-shadow: none; /* No shadow for PDF capture */
+        }
+        
+        .pdf-page {
+            width: 210mm;
+            height: 297mm; /* A4 height */
+            padding: 25.4mm; /* 1 inch margin on all sides */
+            box-sizing: border-box; /* Include padding in height */
+            page-break-after: always; /* Ensure each div breaks to new page */
+            overflow: hidden; /* Hide overflow to prevent scrollbars during capture */
+        }
+
+        .pdf-page:last-child {
+            page-break-after: avoid; /* No page break after the last page */
+        }
+
+        /* Specific PDF template overrides to ensure consistent look */
+        .pdf-template .document-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+        }
+        
+        .pdf-template h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #1a237e;
+        }
+        
+        .pdf-template h3 {
+            font-size: 1.4rem;
+            margin: 15px 0;
+            color: #d32f2f;
+            text-decoration: underline;
+        }
+        
+        .pdf-template p {
+            margin: 0; /* Reset default paragraph margin */
+            padding: 0; /* Reset default paragraph padding */
+            text-align: justify;
+        }
+        
+        .pdf-template .copy-section {
+            margin-top: 25px;
+            padding-left: 20px;
+        }
+
+        /* Specific styles for aligning with Word document layout */
+        .pdf-template .indented {
+            margin-left: 50px; /* Adjust as needed for indentation */
+        }
+        .pdf-template .centered {
+            text-align: center;
+        }
+        .pdf-template .right-aligned {
+            text-align: right;
+        }
+        .pdf-template .top-margin-small {
+            margin-top: 10px;
+        }
+        .pdf-template .top-margin-medium {
+            margin-top: 20px;
+        }
+        .pdf-template .top-margin-large {
+            margin-top: 30px;
+        }
+        .pdf-template .line-height-normal {
+            line-height: normal; /* For single lines that shouldn't have extra line-height */
+        }
+        .pdf-template .field-display {
+            /* No specific styling, blends with text */
+            display: inline; /* Ensure no unwanted line breaks or gaps */
+        }
+        .pdf-template .word-doc-p {
+            margin-top: 10px; /* Specific margin for paragraphs based on Word doc */
+            margin-bottom: 0;
+        }
+
+        /* Adjusting spacing for specific elements in the Word document copy */
+        /* This rule was problematic for explicit margins, now removed to allow top-margin-medium to work */
+        /* .pdf-template p.word-doc-p + p.word-doc-p {
+            margin-top: 0;
+        } */
+
+        .pdf-template p.list-item {
+            margin-top: 0;
+            padding-left: 20px; /* Indent list items */
+            text-indent: -20px; /* Hanging indent for list numbers */
+        }
+        /* Photo placeholder specific styles */
+        .pdf-template .photo-placeholder {
+            width: 101.6mm; /* 4 inches */
+            height: 101.6mm; /* 4 inches */
+            border: 1px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto;
+            text-align: center;
+            font-size: 16pt;
+            color: #555;
+            background-color: #f0f0f0;
+            box-sizing: border-box;
+        }
+
+        /* Root CSS variables (from original React code for reference, not directly used by Tailwind) */
+        :root {
+            --primary: #1a237e;
+            --primary-light: #534bae;
+            --secondary: #d32f2f;
+            --light: #f5f5f5;
+            --dark: #212121;
+            --border: #bdbdbd;
+            --highlight: #fffde7;
+            --shadow: rgba(0, 0, 0, 0.16);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #e0e0e0, #f5f5f5);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 20px;
+            color: var(--dark);
+        }
+        /* Specific Tailwind override to ensure star color works */
+        .star.text-yellow-500 {
+            color: #f59e0b; /* Tailwind's yellow-500 */
+        }
+        .star.text-gray-300 {
+            color: #d1d5db; /* Tailwind's gray-300 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto flex flex-col gap-5 p-5 min-h-screen">
+        <!-- Header -->
+        <header class="bg-blue-900 text-white p-4 rounded-lg shadow-lg flex justify-between items-center flex-wrap">
+            <h1 class="text-2xl font-semibold flex items-center gap-2">
+                <i class="fas fa-search-location text-yellow-300"></i> Delhi Police - Missing Person Notice Generator
+            </h1>
+        </header>
+
+        <!-- Summary Panel -->
+        <div class="bg-white p-5 rounded-lg shadow-md grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div class="flex flex-col gap-1">
+                <label class="font-semibold text-blue-900 text-sm uppercase">Name</label>
+                <input type="text" id="name" value="" placeholder="Enter name" class="p-2 border border-gray-300 rounded-md text-base bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="font-semibold text-blue-900 text-sm uppercase">Father Name</label>
+                <input type="text" id="fatherName" value="" placeholder="Enter father name" class="p-2 border border-gray-300 rounded-md text-base bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="font-semibold text-blue-900 text-sm uppercase">Age</label>
+                <input type="text" id="age" value="" placeholder="Enter age" class="p-2 border border-gray-300 rounded-md text-base bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="font-semibold text-blue-900 text-sm uppercase">Address</label>
+                <input type="text" id="address" value="" placeholder="Enter address" class="p-2 border border-gray-300 rounded-md text-base bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="font-semibold text-blue-900 text-sm uppercase">Sex</label>
+                <!-- Updated Sex dropdown -->
+                <select id="sex" class="p-2 border border-gray-300 rounded-md text-base bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
+                    <option value="MALE">MALE</option>
+                    <option value="FEMALE">FEMALE</option>
+                    <option value="TRANSGENDER">TRANSGENDER</option>
+                    <option value="OTHER">OTHER</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Main Content Area: Flexbox for left/right panels -->
+        <div class="main-content flex flex-col md:flex-row gap-5">
+            <!-- Editor Panel (Left) -->
+            <div class="editor-panel w-full md:w-1/2 bg-white p-5 rounded-lg shadow-md flex flex-col min-h-[500px] h-[calc(100vh-250px)]">
+                <div class="flex justify-between items-center pb-4 mb-4 border-b-2 border-blue-400">
+                    <h2 class="text-xl text-blue-900 font-semibold flex items-center gap-2">
+                        <i class="fas fa-edit"></i> Edit Fields
+                    </h2>
+                    <div class="text-gray-600 text-sm flex items-center gap-1">
+                        <i class="fas fa-sync-alt"></i> Changes sync automatically
+                    </div>
+                </div>
+                <div class="editor-content grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2">
+                    <!-- Personal Details -->
+                    <div class="field-group bg-gray-50 p-4 rounded-lg border-l-4 border-blue-900">
+                        <h3 class="text-blue-900 text-lg font-semibold mb-3 flex items-center gap-2"><i class="fas fa-user"></i> Personal Details</h3>
+                        <div class="form-field">
+                            <label for="built" class="block mb-1 font-medium text-gray-700 text-sm">BUILT</label>
+                            <select id="built" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase">
+                                <option value="STRONG">STRONG</option>
+                                <option value="MEDIUM">MEDIUM</option>
+                                <option value="THIN">THIN</option>
+                                <option value="FAT">FAT</option>
+                                <option value="LEAN">LEAN</option>
+                                <option value="MUSCULAR">MUSCULAR</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="height" class="block mb-1 font-medium text-gray-700 text-sm">HEIGHT</label>
+                            <!-- Updated Height dropdown -->
+                            <select id="height" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase">
+                                <option value="4 FEET 0 INCHES">4 FEET 0 INCHES</option>
+                                <option value="4 FEET 1 INCHES">4 FEET 1 INCHES</option>
+                                <option value="4 FEET 2 INCHES">4 FEET 2 INCHES</option>
+                                <option value="4 FEET 3 INCHES">4 FEET 3 INCHES</option>
+                                <option value="4 FEET 4 INCHES">4 FEET 4 INCHES</option>
+                                <option value="4 FEET 5 INCHES">4 FEET 5 INCHES</option>
+                                <option value="4 FEET 6 INCHES">4 FEET 6 INCHES</option>
+                                <option value="4 FEET 7 INCHES">4 FEET 7 INCHES</option>
+                                <option value="4 FEET 8 INCHES">4 FEET 8 INCHES</option>
+                                <option value="4 FEET 9 INCHES">4 FEET 9 INCHES</option>
+                                <option value="4 FEET 10 INCHES">4 FEET 10 INCHES</option>
+                                <option value="4 FEET 11 INCHES">4 FEET 11 INCHES</option>
+                                <option value="5 FEET 0 INCHES">5 FEET 0 INCHES</option>
+                                <option value="5 FEET 1 INCHES">5 FEET 1 INCHES</option>
+                                <option value="5 FEET 2 INCHES">5 FEET 2 INCHES</option>
+                                <option value="5 FEET 3 INCHES">5 FEET 3 INCHES</option>
+                                <option value="5 FEET 4 INCHES">5 FEET 4 INCHES</option>
+                                <option value="5 FEET 5 INCHES">5 FEET 5 INCHES</option>
+                                <option value="5 FEET 6 INCHES">5 FEET 6 INCHES</option>
+                                <option value="5 FEET 7 INCHES">5 FEET 7 INCHES</option>
+                                <option value="5 FEET 8 INCHES">5 FEET 8 INCHES</option>
+                                <option value="5 FEET 9 INCHES">5 FEET 9 INCHES</option>
+                                <option value="5 FEET 10 INCHES">5 FEET 10 INCHES</option>
+                                <option value="5 FEET 11 INCHES">5 FEET 11 INCHES</option>
+                                <option value="6 FEET 0 INCHES">6 FEET 0 INCHES</option>
+                                <option value="6 FEET 1 INCHES">6 FEET 1 INCHES</option>
+                                <option value="6 FEET 2 INCHES">6 FEET 2 INCHES</option>
+                                <option value="6 FEET 3 INCHES">6 FEET 3 INCHES</option>
+                                <option value="6 FEET 4 INCHES">6 FEET 4 INCHES</option>
+                                <option value="6 FEET 5 INCHES">6 FEET 5 INCHES</option>
+                                <option value="6 FEET 6 INCHES">6 FEET 6 INCHES</option>
+                                <option value="6 FEET 7 INCHES">6 FEET 7 INCHES</option>
+                                <option value="6 FEET 8 INCHES">6 FEET 8 INCHES</option>
+                                <option value="6 FEET 9 INCHES">6 FEET 9 INCHES</option>
+                                <option value="6 FEET 10 INCHES">6 FEET 10 INCHES</option>
+                                <option value="6 FEET 11 INCHES">6 FEET 11 INCHES</option>
+                                <option value="7 FEET 0 INCHES">7 FEET 0 INCHES</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="complexion" class="block mb-1 font-medium text-gray-700 text-sm">COMPLEXION</label>
+                            <select id="complexion" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase">
+                                <option value="FAIR">FAIR</option>
+                                <option value="WHEATISH">WHEATISH</option>
+                                <option value="DARK">DARK</option>
+                                <option value="SHALLOW">SHALLOW</option>
+                                <option value="PALE">PALE</option>
+                                <option value="RUDDY">RUDDY</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="face" class="block mb-1 font-medium text-gray-700 text-sm">FACE TYPE</label>
+                            <select id="face" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase">
+                                <option value="ROUND">ROUND</option>
+                                <option value="OVAL">OVAL</option>
+                                <option value="SQUARE">SQUARE</option>
+                                <option value="RECTANGULAR">RECTANGULAR</option>
+                                <option value="TRIANGULAR">TRIANGULAR</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="hairColor" class="block mb-1 font-medium text-gray-700 text-sm">HAIR COLOR</label>
+                            <select id="hairColor" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase">
+                                <option value="BLACK">BLACK</option>
+                                <option value="BROWN">BROWN</option>
+                                <option value="BLONDE">BLONDE</option>
+                                <option value="RED">RED</option>
+                                <option value="GRAY">GRAY</option>
+                                <option value="WHITE">WHITE</option>
+                                <option value="DYED">DYED</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Clothing & Appearance -->
+                    <div class="field-group bg-gray-50 p-4 rounded-lg border-l-4 border-blue-900">
+                        <h3 class="text-blue-900 text-lg font-semibold mb-3 flex items-center gap-2"><i class="fas fa-tshirt"></i> Clothing & Appearance</h3>
+                        <div class="form-field">
+                            <label for="cloths" class="block mb-1 font-medium text-gray-700 text-sm">CLOTHING</label>
+                            <input type="text" id="cloths" placeholder="Clothing description" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                    </div>
+
+                    <!-- Missing Person Photo Upload -->
+                    <div class="field-group bg-gray-50 p-4 rounded-lg border-l-4 border-blue-900">
+                        <h3 class="text-blue-900 text-lg font-semibold mb-3 flex items-center gap-2"><i class="fas fa-image"></i> Missing Person Photo</h3>
+                        <div class="form-field flex flex-col items-center">
+                            <label for="photoUploadInput" class="block mb-2 font-medium text-gray-700 text-sm cursor-pointer bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-md transition-colors duration-200">
+                                <i class="fas fa-upload mr-2"></i> Choose Photo
+                            </label>
+                            <input type="file" id="photoUploadInput" accept="image/*" class="hidden">
+                            <span id="fileNameDisplay" class="text-gray-600 text-sm mt-1">No file chosen</span>
+                        </div>
+                    </div>
+
+                    <!-- Missing Details -->
+                    <div class="field-group bg-gray-50 p-4 rounded-lg border-l-4 border-blue-900">
+                        <h3 class="text-blue-900 text-lg font-semibold mb-3 flex items-center gap-2"><i class="fas fa-map-marker-alt"></i> Missing Details</h3>
+                        <div class="form-field">
+                            <label for="missingDate" class="block mb-1 font-medium text-gray-700 text-sm">MISSING DATE</label>
+                            <input type="text" id="missingDate" placeholder="DD/MM/YYYY" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                        <div class="form-field">
+                            <label for="missingTime" class="block mb-1 font-medium text-gray-700 text-sm">MISSING TIME</label>
+                            <input type="text" id="missingTime" placeholder="Approx time" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                        <div class="form-field">
+                            <label for="missingPlace" class="block mb-1 font-medium text-gray-700 text-sm">MISSING PLACE</label>
+                            <input type="text" id="missingPlace" placeholder="Place last seen" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                    </div>
+
+                    <!-- Police Details -->
+                    <div class="field-group bg-gray-50 p-4 rounded-lg border-l-4 border-blue-900">
+                        <h3 class="text-blue-900 text-lg font-semibold mb-3 flex items-center gap-2"><i class="fas fa-file-alt"></i> Police Details</h3>
+                        <div class="form-field">
+                            <label for="ddNo" class="block mb-1 font-medium text-gray-700 text-sm">DD NUMBER</label>
+                            <input type="text" id="ddNo" placeholder="DD Number" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                        <div class="form-field">
+                            <label for="entryDate" class="block mb-1 font-medium text-gray-700 text-sm">ENTRY DATE</label>
+                            <input type="text" id="entryDate" placeholder="DD/MM/YYYY" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                        <div class="form-field">
+                            <label for="policeStation" class="block mb-1 font-medium text-gray-700 text-sm">POLICE STATION</label>
+                            <input type="text" id="policeStation" placeholder="Station name" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                        <div class="form-field">
+                            <label for="district" class="block mb-1 font-medium text-gray-700 text-sm">DISTRICT</label>
+                            <input type="text" id="district" placeholder="District name" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                        <div class="form-field">
+                            <label for="telephone" class="block mb-1 font-medium text-gray-700 text-sm">TELEPHONE NO</label>
+                            <input type="text" id="telephone" placeholder="Phone number" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                        <div class="form-field">
+                            <label for="mailId" class="block mb-1 font-medium text-gray-700 text-sm">MAIL ID</label>
+                            <input type="text" id="mailId" placeholder="Email address" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                    </div>
+
+                    <!-- Reason & Additional Info -->
+                    <div class="field-group bg-gray-50 p-4 rounded-lg border-l-4 border-blue-900">
+                        <h3 class="text-blue-900 text-lg font-semibold mb-3 flex items-center gap-2"><i class="fas fa-comment"></i> Reason & Additional Info</h3>
+                        <div class="form-field">
+                            <label for="reason" class="block mb-1 font-medium text-gray-700 text-sm">REASON FOR MISSING</label>
+                            <select id="reason" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase">
+                                <option value="UNKNOWN">UNKNOWN</option>
+                                <option value="ALTERCATION WITH FATHER">ALTERCATION WITH FATHER</option>
+                                <option value="HAD FIGHT WITH MOTHER">HAD FIGHT WITH MOTHER</option>
+                                <option value="DISPUTE WITH RELATIVES">DISPUTE WITH RELATIVES</option>
+                                <option value="CONFLICT WITH SISTER">CONFLICT WITH SISTER</option>
+                                <option value="LOST TEMPER DURING ARGUMENT">LOST TEMPER DURING ARGUMENT</option>
+                                <option value="SUFFERED EMOTIONAL BREAKDOWN">SUFFERED EMOTIONAL BREAKDOWN</option>
+                                <option value="PEER PRESSURE">PEER PRESSURE</option>
+                                <option value="FAMILY STRESS">FAMILY STRESS</option>
+                                <option value="ABSCONDED DUE TO ABUSE">ABSCONDED DUE TO ABUSE</option>
+                                <option value="RAN AWAY DUE TO FEAR OF PUNISHMENT">RAN AWAY DUE TO FEAR OF PUNISHMENT</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="additionalInfo" class="block mb-1 font-medium text-gray-700 text-sm">ADDITIONAL INFORMATION</label>
+                            <textarea id="additionalInfo" placeholder="Any other relevant information" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase min-h-[80px] resize-y"></textarea>
+                        </div>
+                        <div class="form-field">
+                            <label for="relative" class="block mb-1 font-medium text-gray-700 text-sm">RELATIVE NAME AND ADDRESS</label>
+                            <input type="text" id="relative" placeholder="Relative's Name and Address" class="w-full p-2 border border-gray-300 rounded-md text-base bg-yellow-50 uppercase" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Buttons -->
+                <div class="editor-toolbar flex justify-center gap-4 pt-4 border-t border-gray-300 mt-auto">
+                    <button id="exportWordBtn" class="bg-green-500 text-white py-2 px-4 rounded-md shadow hover:bg-green-600 transition-all duration-300 flex items-center gap-2">
+                        <i class="fas fa-file-word"></i> Export to Word
+                    </button>
+                    <button id="exportPdfBtn" class="bg-green-500 text-white py-2 px-4 rounded-md shadow hover:bg-green-600 transition-all duration-300 flex items-center gap-2">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                    <button id="resetFormBtn" class="bg-red-500 text-white py-2 px-4 rounded-md shadow hover:bg-red-600 transition-all duration-300 flex items-center gap-2">
+                        <i class="fas fa-redo"></i> Reset Form
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview Panel (Right) -->
+            <div class="preview-panel w-full md:w-1/2 bg-white p-5 rounded-lg shadow-md flex flex-col min-h-[500px] h-[calc(100vh-250px)]">
+                <div class="flex justify-between items-center pb-4 mb-4 border-b-2 border-blue-400">
+                    <h2 class="text-xl text-blue-900 font-semibold flex items-center gap-2">
+                        <i class="fas fa-file-alt"></i> Document Preview
+                    </h2>
+                    <div class="text-gray-600 text-sm flex items-center gap-1">
+                        <i class="fas fa-eye"></i> What You See Is What You Get
+                    </div>
+                </div>
+                <div id="preview-content" class="preview-content overflow-y-auto p-5 bg-gray-50 border border-gray-200 rounded-md font-serif text-base">
+                    <!-- Dynamically rendered document content will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Section -->
+        <div class="bg-white p-5 rounded-lg shadow-md text-center">
+            <h2 class="text-xl text-blue-900 font-semibold mb-4">Rate this Document Generator</h2>
+            <div id="rating-stars" class="flex justify-center gap-2 mb-4">
+                <!-- Stars will be dynamically generated here -->
+                <div class="star text-3xl cursor-pointer transition-colors duration-200" data-value="1"><i class="far fa-star"></i></div>
+                <div class="star text-3xl cursor-pointer transition-colors duration-200" data-value="2"><i class="far fa-star"></i></div>
+                <div class="star text-3xl cursor-pointer transition-colors duration-200" data-value="3"><i class="far fa-star"></i></div>
+                <div class="star text-3xl cursor-pointer transition-colors duration-200" data-value="4"><i class="far fa-star"></i></div>
+                <div class="star text-3xl cursor-pointer transition-colors duration-200" data-value="5"><i class="far fa-star"></i></div>
+            </div>
+            <div class="text-gray-700 text-lg">
+                Average Rating: <span id="avg-rating" class="font-bold">4.7</span> (<span id="rating-count" class="font-bold">142</span> ratings)
+            </div>
+        </div>
+
+        <!-- Sync Notification -->
+        <div id="sync-notification" class="sync-notification fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-md shadow-lg flex items-center gap-2 z-50 hidden">
+            <i class="fas fa-sync-alt"></i> Field updated across document
+        </div>
+
+        <!-- Custom Confirmation Modal -->
+        <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[10000] hidden">
+            <div class="bg-white p-8 rounded-lg shadow-xl text-center max-w-sm w-11/12 font-sans">
+                <p id="modal-message" class="text-xl mb-6 text-gray-800"></p>
+                <div class="flex justify-center gap-4">
+                    <button id="modal-yes-btn" class="bg-green-500 text-white py-2 px-6 rounded-md font-semibold hover:bg-green-600 transition-colors duration-300">
+                        Yes
+                    </button>
+                    <button id="modal-no-btn" class="bg-red-500 text-white py-2 px-6 rounded-md font-semibold hover:bg-red-600 transition-colors duration-300">
+                        No
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden PDF Template - Structured to match Word document pages exactly -->
+        <div id="pdf-template" class="pdf-template hidden-pdf-template">
+            <!-- PDF Page 1 -->
+            <div class="pdf-page" id="pdf-page-1">
+                <p style="margin: 0; padding: 0;">TO : ALL SSP,S AND DCP,S IN INDIA AND ALL SHO,S OF DELHI.</p>
+                <p style="margin: 0; padding: 0;">FROM : DCP/<span class="field-display" id="pdfDistrictFrom"></span> DISTT. DELHI</p>
+                
+                <p class="word-doc-p" style="text-indent: 50px;">ONE <span class="field-display" id="pdfSex"></span> NAMELY <span class="field-display" id="pdfName"></span> S/O, D/O, W/O, C/O <span class="field-display" id="pdfFatherName"></span> R/O <span class="field-display" id="pdfAddress"></span>, AGE- <span class="field-display" id="pdfAge"></span> YRS , BUILT: <span class="field-display" id="pdfBuilt"></span>, HEIGHT ABOUT <span class="field-display" id="pdfHeight"></span> , COMPLEXION: <span class="field-display" id="pdfComplexion"></span>, HAIR: <span class="field-display" id="pdfHairColor"></span>, FACE: <span class="field-display" id="pdfFace"></span>, CLOTHS: <span class="field-display" id="pdfCloths"></span> HAS BEEN REPORTED MISSING SINCE <span class="field-display" id="pdfMissingDate"></span> AT AROUND <span class="field-display" id="pdfMissingTime"></span> FROM <span class="field-display" id="pdfMissingPlace"></span>, IN THIS REGARD REPORT VIDE DD NO. <span class="field-display" id="pdfDdNo"></span>, DATED: <span class="field-display" id="pdfEntryDate"></span> PS <span class="field-display" id="pdfPoliceStation"></span> DELHI HAS BEEN REGISTERED. IF ANY CLUE OR ANY INFORMATION REGARDING THE MISSING PERSON FOUND UNDERSIGNED MAY PLEASE BE INFORMED ON TELEPHONE NO.- <span class="field-display" id="pdfTelephone"></span>.</p>
+                
+                <p class="word-doc-p" style="margin-top: 10px;">The details and description are follows: - </p>
+                <p class="word-doc-p" style="line-height: normal;">SEX: <span class="field-display" id="pdfSex2"></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AGE: <span class="field-display" id="pdfAge2"></span> YRS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; HEIGHT: <span class="field-display" id="pdfHeight2"></span></p>
+                <p class="word-doc-p" style="line-height: normal;">BUILT: <span class="field-display" id="pdfBuilt2"></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; COMPLEXION: <span class="field-display" id="pdfComplexion2"></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FACE: <span class="field-display" id="pdfFace2"></span></p>
+                <p class="word-doc-p" style="line-height: normal;">CLOTHS: <span class="field-display" id="pdfCloths2"></span>.</p>
+                
+                <!-- Updated Signature Block 1 -->
+                <div class="signature-block" style="margin-top: 30px; text-align: right;">
+                    <p style="margin: 0; padding: 0; text-align: right;">FOR DY. COMMISSIONER OF POLICE</p>
+                    <p style="margin: 0; padding: 0; text-align: right;"><span class="field-display" id="pdfDistrict"></span> DISTRICT</p>
+                    <p style="margin: 0; padding: 0; text-align: right;">Delhi</p>
+                    <p style="margin-top: 5px; text-align: right;">PH. NO- 011- <span class="field-display" id="pdfTelephone2"></span></p>
+                </div>
+            </div>
+            
+            <!-- PDF Page 2 -->
+            <div class="pdf-page" id="pdf-page-2">
+                <p class="centered top-margin-large line-height-normal">
+                    DD NO. <span class="field-display" id="pdfDdNo2"></span> &nbsp;&nbsp; DATE- <span class="field-display" id="pdfEntryDate2"></span> &nbsp;&nbsp; PS- <span class="field-display" id="pdfPoliceStation2"></span> DIST - <span class="field-display" id="pdfDistrict3"></span> , DELHI
+                </p>
+                <!-- Added top-margin-large for a clear gap after DD NO. line -->
+                <p class="word-doc-p top-margin-large">Sub: <span class="field-display" id="pdfName2"></span> S/O, D/O, W/O, C/O <span class="field-display" id="pdfFatherName2"></span> R/O <span class="field-display" id="pdfAddress2"></span>, AGE- <span class="field-display" id="pdfAge3"></span> YRS</p>
+                <!-- Added top-margin-medium for gap after Subject and before Sir -->
+                <p class="word-doc-p top-margin-medium">Sir,</p>
+                
+                <p class="word-doc-p top-margin-medium" style="text-indent: 50px;">ONE <span class="field-display" id="pdfSex3"></span> NAMELY <span class="field-display" id="pdfName3"></span> S/O, D/O, W/O, C/O <span class="field-display" id="pdfFatherName3"></span> R/O <span class="field-display" id="pdfAddress3"></span>, AGE- <span class="field-display" id="pdfAge4"></span> YRS , BUILT: <span class="field-display" id="pdfBuilt3"></span>, HEIGHT ABOUT <span class="field-display" id="pdfHeight3"></span> , COMPLEXION: <span class="field-display" id="pdfComplexion3"></span>, HAIR: <span class="field-display" id="pdfHairColor2"></span>, FACE: <span class="field-display" id="pdfFace3"></span>, CLOTHS: <span class="field-display" id="pdfCloths3"></span> HAS BEEN REPORTED MISSING SINCE <span class="field-display" id="pdfMissingDate2"></span> AT AROUND <span class="field-display" id="pdfMissingTime2"></span> FROM <span class="field-display" id="pdfMissingPlace2"></span>, IN THIS REGARD REPORT VIDE DD NO. <span class="field-display" id="pdfDdNo3"></span>, DATED: <span class="field-display" id="pdfEntryDate3"></span> PS <span class="field-display" id="pdfPoliceStation3"></span> DELHI HAS BEEN REGISTERED. IF ANY CLUE OR ANY INFORMATION REGARDING THE MISSING PERSON FOUND UNDERSIGNED MAY PLEASE BE INFORMED ON TELEPHONE NO.- <span class="field-display" id="pdfTelephone3"></span>.</p>
+                <p class="word-doc-p indented top-margin-small">YOU ARE REQUESTED KINDLY DO THE NEEDFUL.</p>
+                
+                <!-- Updated Signature Block 2 -->
+                <div class="signature-block" style="margin-top: 50px; text-align: right;">
+                    <p style="margin: 0; padding: 0; text-align: right;">STATION HOUSE OFFICER</p>
+                    <p style="margin: 0; padding: 0; text-align: right;">PS- <span class="field-display" id="pdfPoliceStation4"></span>,<span class="field-display" id="pdfDistrict2"></span> DELHI</p>
+                    <p style="margin-top: 5px; text-align: right;"><span class="field-display" id="pdfMailId"></span></p>
+                </div>
+
+                <div class="copy-section" style="margin-top: 30px; padding-left: 0;">
+                    <p class="word-doc-p list-item">Copy to Director NCRB for publishing the above details in NCRB Gazette.</p>
+                    <p class="word-doc-p list-item">Copy to PRO Delhi Police for publishing the above details in leading newspapers.</p>
+                    <p class="word-doc-p list-item">Copy to Director CBI for publishing the above details in CBI/CAS Website.</p>
+                    <p class="word-doc-p list-item">Copy To DOORDARSHAN KENDRA New Delhi.</p>
+                    <p class="word-doc-p list-item">Copy to प्रसार भारती भारतीय प्रसारण निगम आकाशवाणी नई दिल्ली .</p>
+                </div>
+            </div>
+            
+            <!-- PDF Page 3 -->
+            <div class="pdf-page" id="pdf-page-3">
+                <p class="centered top-margin-large line-height-normal">
+                    DD NO. <span class="field-display" id="pdfDdNo4"></span> &nbsp;&nbsp; DATE- <span class="field-display" id="pdfEntryDate4"></span> &nbsp;&nbsp; PS- <span class="field-display" id="pdfPoliceStation5"></span> &nbsp;&nbsp; DIST- <span class="field-display" id="pdfDistrict4"></span> , DELHI
+                </p>
+                <h3 class="centered" style="margin-top: 20px;">Hue & Cry Notice</h3>
+                
+                <!-- Photo placeholder for PDF/Word export -->
+                <div class="photo-placeholder">
+                    <img id="pdfDisplayedPhoto" src="https://placehold.co/150x150/EEEEEE/555555?text=NO%20IMAGE" alt="Missing Person Photo" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
+                </div>
+
+                <p class="word-doc-p" style="text-indent: 50px;">ONE <span class="field-display" id="pdfSex4"></span> NAMELY <span class="field-display" id="pdfName4"></span> S/O, D/O, W/O, C/O <span class="field-display" id="pdfFatherName4"></span> R/O <span class="field-display" id="pdfAddress4"></span>, AGE- <span class="field-display" id="pdfAge5"></span> YRS , BUILT: <span class="field-display" id="pdfBuilt4"></span>, HEIGHT ABOUT <span class="field-display" id="pdfHeight4"></span> , COMPLEXION: <span class="field-display" id="pdfComplexion4"></span>, HAIR: <span class="field-display" id="pdfHairColor3"></span>, FACE: <span class="field-display" id="pdfFace4"></span>, CLOTHS: <span class="field-display" id="pdfCloths4"></span> HAS BEEN REPORTED MISSING SINCE <span class="field-display" id="pdfMissingDate3"></span> AT AROUND <span class="field-display" id="pdfMissingTime3"></span> FROM <span class="field-display" id="pdfMissingPlace3"></span>, IN THIS REGARD REPORT VIDE DD NO. <span class="field-display" id="pdfDdNo5"></span>, DATED: <span class="field-display" id="pdfEntryDate5"></span> PS <span class="field-display" id="pdfPoliceStation6"></span> DELHI HAS BEEN REGISTERED. IF ANY CLUE OR ANY INFORMATION REGARDING THE MISSING PERSON FOUND UNDERSIGNED MAY PLEASE BE INFORMED ON TELEPHONE NO.- <span class="field-display" id="pdfTelephone5"></span>.</p>
+                
+                <!-- Updated Signature Block 3 -->
+                <div class="signature-block" style="margin-top: 50px; text-align: right;">
+                    <p style="margin: 0; padding: 0; text-align: right;">SHO/<span class="field-display" id="pdfPoliceStation7"></span></p>
+                    <p style="margin-top: 5px; text-align: right;"><span class="field-display" id="pdfTelephone6"></span>.</p>
+                </div>
+            </div>
+            
+            <!-- PDF Page 4 -->
+            <div class="pdf-page" id="pdf-page-4">
+                <p class="top-margin-large" style="font-style: italic;">
+                    TRACED/ PAAYA, INFORMATON, HANDEOVER &nbsp;&nbsp;&nbsp;&nbsp; IN DD NO. <span class="field-display" id="pdfDdNo6"></span> DT. <span class="field-display" id="pdfDate"></span>
+                </p>
+                <p class="word-doc-p top-margin-medium">
+                    AT THIS TIME IT IS LODGED THAT ONE PERSON NAMLY <span class="field-display" id="pdfName5"></span> S/O <span class="field-display" id="pdfFatherName5"></span> AGE-<span class="field-display" id="pdfAge6"></span> YRS, CAME TO POLICE STATION WITH HIS <span class="field-display" id="pdfRelative"></span> WHO STATED THAT <span class="field-display" id="pdfReason"></span>. NOTHING WRONG HAS HAPPENED WITH HIM IN THESE DAYS. AFTER RECORDING OF THE <span class="field-display" id="pdfName6"></span> S/O, D/O, W/O, C/O <span class="field-display" id="pdfFatherName6"></span> R/O <span class="field-display" id="pdfAddress5"></span>, AGE- <span class="field-display" id="pdfAge7"></span> YRS, WAS RELIVED FROM THE INTEROGATION SUBMITTED BY SELF.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- jsPDF and html2canvas scripts (must be loaded after the elements they will interact with) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        // Initial form data
+        let formData = {
+            name: '', // Changed to empty string
+            fatherName: '', // Changed to empty string
+            age: '', // Changed to empty string
+            address: '', // Changed to empty string
+            sex: 'MALE',
+            built: 'MEDIUM',
+            height: '5 FEET 8 INCHES',
+            complexion: 'WHEATISH',
+            face: 'OVAL',
+            hairColor: 'BLACK',
+            cloths: '', // Changed to empty string
+            missingDate: '', // Changed to empty string
+            missingTime: '', // Changed to empty string
+            missingPlace: '', // Changed to empty string
+            ddNo: '', // Changed to empty string
+            entryDate: '', // Changed to empty string
+            policeStation: 'ROHINI NORTH', // Keep default or change to '' as needed
+            district: 'ROHINI', // Keep default or change to '' as needed
+            telephone: '011-27854896', // Keep default or change to '' as needed
+            mailId: 'rohininorth@delhipolice.gov.in', // Keep default or change to '' as needed
+            reason: 'FAMILY STRESS',
+            relative: '', // Changed to empty string
+            photoDataURL: 'https://placehold.co/150x150/EEEEEE/555555?text=NO%20IMAGE' // Default placeholder image for photo
+        };
+
+        let currentRating = 0;
+        let averageRating = 4.7;
+        let ratingCount = 142;
+        let currentModalConfirmAction = null;
+
+        const rememberedFields = ['policeStation', 'district', 'telephone', 'mailId'];
+
+        // Function to update all displayed fields
+        function updateAllFields() {
+            // Update summary panel inputs
+            document.getElementById('name').value = formData.name;
+            document.getElementById('fatherName').value = formData.fatherName;
+            document.getElementById('age').value = formData.age;
+            document.getElementById('address').value = formData.address;
+            // The sex input in summary is now linked to the main dropdown, so remove separate update for it
+            document.getElementById('sex').value = formData.sex;
+
+
+            // Update editor panel inputs
+            document.getElementById('built').value = formData.built;
+            // Use formData.height for the select element
+            document.getElementById('height').value = formData.height; 
+            document.getElementById('complexion').value = formData.complexion;
+            document.getElementById('face').value = formData.face;
+            document.getElementById('hairColor').value = formData.hairColor;
+            document.getElementById('cloths').value = formData.cloths;
+            document.getElementById('missingDate').value = formData.missingDate;
+            document.getElementById('missingTime').value = formData.missingTime;
+            document.getElementById('missingPlace').value = formData.missingPlace;
+            document.getElementById('ddNo').value = formData.ddNo;
+            document.getElementById('entryDate').value = formData.entryDate;
+            document.getElementById('policeStation').value = formData.policeStation;
+            document.getElementById('district').value = formData.district;
+            document.getElementById('telephone').value = formData.telephone;
+            document.getElementById('mailId').value = formData.mailId;
+            document.getElementById('reason').value = formData.reason;
+            const additionalInfoEl = document.getElementById('additionalInfo');
+            if (additionalInfoEl) {
+                additionalInfoEl.value = formData.additionalInfo || '';
+            }
+            document.getElementById('relative').value = formData.relative;
+
+            // Update preview panel content
+            updatePreviewContent();
+
+            // Update hidden PDF template fields
+            updatePdfTemplateFields();
+        }
+
+        // Function to update the preview panel content
+        function updatePreviewContent() {
+            const previewContentDiv = document.getElementById('preview-content');
+            // Store the current scroll position before updating innerHTML
+            const scrollY = previewContentDiv.scrollTop;
+
+            previewContentDiv.innerHTML = `
+                <div>
+                    <p class="m-0 p-0">TO : ALL SSP,S AND DCP,S IN INDIA AND ALL SHO,S OF DELHI.</p>
+                    <p style="margin: 0; padding: 0;">FROM : DCP/<span class="font-bold bg-yellow-50 px-1">${formData.district}</span> DISTT. DELHI</p>
+                    
+                    <p class="mt-2 indent-12">ONE <span class="font-bold bg-yellow-50 px-1">${formData.sex}</span> NAMELY <span class="font-bold bg-yellow-50 px-1">${formData.name}</span> S/O, D/O, W/O, C/O <span class="font-bold bg-yellow-50 px-1">${formData.fatherName}</span> R/O <span class="font-bold bg-yellow-50 px-1">${formData.address}</span>, AGE- <span class="font-bold bg-yellow-50 px-1">${formData.age}</span> YRS , BUILT: <span class="font-bold bg-yellow-50 px-1">${formData.built}</span>, HEIGHT ABOUT <span class="font-bold bg-yellow-50 px-1">${formData.height}</span> , COMPLEXION: <span class="font-bold bg-yellow-50 px-1">${formData.complexion}</span>, HAIR: <span class="font-bold bg-yellow-50 px-1">${formData.hairColor}</span>, FACE: <span class="font-bold bg-yellow-50 px-1">${formData.face}</span>, CLOTHS: <span class="font-bold bg-yellow-50 px-1">${formData.cloths}</span> HAS BEEN REPORTED MISSING SINCE <span class="font-bold bg-yellow-50 px-1">${formData.missingDate}</span> AT AROUND <span class="font-bold bg-yellow-50 px-1">${formData.missingTime}</span> FROM <span class="font-bold bg-yellow-50 px-1">${formData.missingPlace}</span>, IN THIS REGARD REPORT VIDE DD NO. <span class="font-bold bg-yellow-50 px-1">${formData.ddNo}</span>, DATED: <span class="font-bold bg-yellow-50 px-1">${formData.entryDate}</span> PS <span class="font-bold bg-yellow-50 px-1">${formData.policeStation}</span> DELHI HAS BEEN REGISTERED. IF ANY CLUE OR ANY INFORMATION REGARDING THE MISSING PERSON FOUND UNDERSIGNED MAY PLEASE BE INFORMED ON TELEPHONE NO.- <span class="font-bold bg-yellow-50 px-1">${formData.telephone}</span>.</p>
+                    
+                    <p class="mt-2">The details and description are as follows: -</p>
+                    <p class="leading-normal">SEX: <span class="font-bold bg-yellow-50 px-1">${formData.sex}</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AGE: <span class="font-bold bg-yellow-50 px-1">${formData.age}</span> YRS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; HEIGHT: <span class="font-bold bg-yellow-50 px-1">${formData.height}</span></p>
+                    <p class="leading-normal">BUILT: <span class="font-bold bg-yellow-50 px-1">${formData.built}</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; COMPLEXION: <span class="font-bold bg-yellow-50 px-1">${formData.complexion}</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FACE: <span class="font-bold bg-yellow-50 px-1">${formData.face}</span></p>
+                    <p class="leading-normal">CLOTHS: <span class="font-bold bg-yellow-50 px-1">${formData.cloths}</span>.</p>
+
+                    <!-- Photo placeholder for Preview -->
+                    <div class="photo-placeholder border border-gray-300 bg-gray-200 rounded-md p-2 flex items-center justify-center flex-col overflow-hidden my-4">
+                        <img id="previewPhoto" src="${formData.photoDataURL}" alt="Missing Person Photo" class="max-w-full max-h-full object-contain">
+                        <p id="previewPhotoText" class="text-gray-500 text-sm mt-2 ${formData.photoDataURL.includes('placehold.co') ? '' : 'hidden'}">No Image Selected</p>
+                    </div>
+                    
+                    <div class="text-right mt-8 pt-0 border-t-0">
+                        <p class="m-0 p-0">FOR DY. COMMISSIONER OF POLICE</p>
+                        <p class="m-0 p-0"><span class="font-bold bg-yellow-50 px-1">${formData.district}</span> DISTRICT</p>
+                        <p class="m-0 p-0">Delhi</p>
+                        <p class="mt-1">PH. NO- 011- <span class="font-bold bg-yellow-50 px-1">${formData.telephone}</span></p>
+                    </div>
+                    
+                    <hr class="mt-8 border border-gray-300" />
+                    <p class="text-center mt-5 italic">
+                        The full multi-page layout is visible in the PDF export.
+                    </p>
+                </div>
+            `;
+            // Restore scroll position
+            previewContentDiv.scrollTop = scrollY;
+        }
+
+        // Function to update hidden PDF template fields
+        function updatePdfTemplateFields() {
+            const pdfTemplate = document.getElementById('pdf-template');
+            if (!pdfTemplate) return;
+
+            const specialFieldMapping = {
+                name: ['pdfName', 'pdfName2', 'pdfName3', 'pdfName4', 'pdfName5', 'pdfName6'],
+                fatherName: ['pdfFatherName', 'pdfFatherName2', 'pdfFatherName3', 'pdfFatherName4', 'pdfFatherName5', 'pdfFatherName6'],
+                age: ['pdfAge', 'pdfAge2', 'pdfAge3', 'pdfAge4', 'pdfAge5', 'pdfAge6', 'pdfAge7'],
+                address: ['pdfAddress', 'pdfAddress2', 'pdfAddress3', 'pdfAddress4', 'pdfAddress5'],
+                sex: ['pdfSex', 'pdfSex2', 'pdfSex3', 'pdfSex4'],
+                built: ['pdfBuilt', 'pdfBuilt2', 'pdfBuilt3', 'pdfBuilt4'],
+                height: ['pdfHeight', 'pdfHeight2', 'pdfHeight3', 'pdfHeight4'],
+                complexion: ['pdfComplexion', 'pdfComplexion2', 'pdfComplexion3', 'pdfComplexion4'],
+                face: ['pdfFace', 'pdfFace2', 'pdfFace3', 'pdfFace4'],
+                hairColor: ['pdfHairColor', 'pdfHairColor2', 'pdfHairColor3'],
+                cloths: ['pdfCloths', 'pdfCloths2', 'pdfCloths3', 'pdfCloths4'],
+                missingDate: ['pdfMissingDate', 'pdfMissingDate2', 'pdfMissingDate3'],
+                missingTime: ['pdfMissingTime', 'pdfMissingTime2', 'pdfMissingTime3'],
+                missingPlace: ['pdfMissingPlace', 'pdfMissingPlace2', 'pdfMissingPlace3'],
+                ddNo: ['pdfDdNo', 'pdfDdNo2', 'pdfDdNo3', 'pdfDdNo4', 'pdfDdNo5', 'pdfDdNo6'],
+                entryDate: ['pdfEntryDate', 'pdfEntryDate2', 'pdfEntryDate3', 'pdfEntryDate4', 'pdfEntryDate5', 'pdfDate'], // map entryDate to pdfDate for last page
+                policeStation: ['pdfPoliceStation', 'pdfPoliceStation2', 'pdfPoliceStation3', 'pdfPoliceStation4', 'pdfPoliceStation5', 'pdfPoliceStation6', 'pdfPoliceStation7'],
+                district: ['pdfDistrict', 'pdfDistrict2', 'pdfDistrict3', 'pdfDistrict4', 'pdfDistrictFrom'], // Added pdfDistrictFrom
+                telephone: ['pdfTelephone', 'pdfTelephone2', 'pdfTelephone3', 'pdfTelephone4', 'pdfTelephone5', 'pdfTelephone6'],
+                reason: ['pdfReason'],
+                mailId: ['pdfMailId'],
+                relative: ['pdfRelative'] 
+            };
+
+            for (const key in formData) {
+                const value = formData[key];
+                if (specialFieldMapping[key]) {
+                    specialFieldMapping[key].forEach(pdfId => {
+                        const pdfElement = pdfTemplate.querySelector(`#${pdfId}`);
+                        if (pdfElement) {
+                            pdfElement.textContent = value;
+                        }
+                    });
+                } else {
+                    const pdfElement = pdfTemplate.querySelector(`#pdf${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                    if (pdfElement) {
+                        pdfElement.textContent = value;
+                    }
+                }
+            }
+            // Update the photo in the hidden PDF template
+            const pdfDisplayedPhoto = pdfTemplate.querySelector('#pdfDisplayedPhoto');
+            if (pdfDisplayedPhoto) {
+                pdfDisplayedPhoto.src = formData.photoDataURL;
+            }
+        }
+
+        // Handle input changes
+        function handleInputChange(event) {
+            const { id, value } = event.target;
+            const upperCaseValue = value.toUpperCase();
+            formData[id] = upperCaseValue; // Update formData object
+            showSyncNotification();
+
+            // Save to localStorage for specific fields
+            if (rememberedFields.includes(id)) {
+                localStorage.setItem(id, upperCaseValue);
+            }
+
+            updateAllFields(); // Update preview and hidden template
+        }
+
+        // Handle photo file input change
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            if (file) {
+                fileNameDisplay.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    formData.photoDataURL = e.target.result;
+                    showSyncNotification();
+                    updateAllFields(); // Update preview and hidden template
+                };
+                reader.onerror = (error) => {
+                    console.error("Error reading file:", error);
+                    fileNameDisplay.textContent = "Error reading file.";
+                    showConfirmationModal('Error loading image. Please try another file.', null);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                fileNameDisplay.textContent = "No file chosen";
+                formData.photoDataURL = 'https://placehold.co/150x150/EEEEEE/555555?text=NO%20IMAGE'; // Reset to placeholder
+                showSyncNotification();
+                updateAllFields();
+            }
+        }
+
+        // Show sync notification
+        function showSyncNotification() {
+            const notification = document.getElementById('sync-notification');
+            notification.classList.remove('hidden');
+            clearTimeout(notification.timeoutId); // Clear any existing timeout
+            notification.timeoutId = setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 2000);
+        }
+
+        // Show custom confirmation modal
+        function showConfirmationModal(message, onConfirmCallback) {
+            const modal = document.getElementById('modal');
+            const modalMessage = document.getElementById('modal-message');
+            modalMessage.textContent = message;
+            currentModalConfirmAction = onConfirmCallback;
+            modal.classList.remove('hidden');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            currentModalConfirmAction = null;
+        }
+
+        // Handle star rating click
+        function handleStarClick(event) {
+            const starDiv = event.currentTarget;
+            const value = parseInt(starDiv.dataset.value);
+            currentRating = value; // Update current rating
+
+            // Update average rating and count
+            ratingCount++;
+            averageRating = ((averageRating * (ratingCount - 1)) + value) / ratingCount;
+
+            updateRatingDisplay();
+        }
+
+        // Update rating display (stars, average, count)
+        function updateRatingDisplay() {
+            const stars = document.querySelectorAll('#rating-stars .star');
+            stars.forEach(star => {
+                const starValue = parseInt(star.dataset.value);
+                const icon = star.querySelector('i');
+                if (starValue <= currentRating) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    star.classList.remove('text-gray-300');
+                    star.classList.add('text-yellow-500');
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    star.classList.remove('text-yellow-500');
+                    star.classList.add('text-gray-300');
+                }
+            });
+
+            document.getElementById('avg-rating').textContent = averageRating.toFixed(1);
+            document.getElementById('rating-count').textContent = ratingCount;
+        }
+
+        // Export to Word functionality
+        function exportToWord() {
+            updatePdfTemplateFields(); // Ensure PDF template is updated with latest data
+
+            const pdfTemplate = document.getElementById('pdf-template');
+            if (!pdfTemplate) {
+                console.error('PDF template not found for Word export.');
+                showConfirmationModal('Error exporting to Word: Template not found.', null);
+                return;
+            }
+
+            // Temporarily make the template visible to capture current field values
+            pdfTemplate.style.position = 'absolute';
+            pdfTemplate.style.left = '0';
+            pdfTemplate.style.top = '0';
+            pdfTemplate.style.zIndex = '10000';
+
+            const documentContent = pdfTemplate.innerHTML;
+            const sanitizedName = formData.name.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase(); // Sanitize name for filename
+            const filename = `missing_${sanitizedName}.doc`;
+            const convertedHtml = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <title>Missing Person Notice</title>
+                    <style>
+                        body { font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.0; }
+                        p { margin-top: 0; margin-bottom: 0; text-align: justify; } /* Added text-align: justify; */
+                        .word-doc-p { margin-top: 10px; margin-bottom: 0; }
+                        .indented { margin-left: 50px; }
+                        .centered { text-align: center; }
+                        .right-aligned { text-align: right; }
+                        .top-margin-small { margin-top: 10px; }
+                        .top-margin-medium { margin-top: 20px; }
+                        .top-margin-large { margin-top: 30px; }
+                        .line-height-normal { line-height: normal; }
+                        .field-display { } /* No specific styling, blends with text */
+                        .document { padding: 0; box-shadow: none; }
+                        .pdf-page {
+                            width: 210mm; /* A4 width */
+                            height: 297mm; /* A4 height */
+                            padding: 25.4mm; /* Standard margins */
+                            box-sizing: border-box;
+                            display: block; /* Ensure it's a block element */
+                            page-break-after: always; /* Keep this for robustness */
+                        }
+                        /* Force page break before subsequent pages */
+                        .pdf-page:not(:first-of-type) {
+                            page-break-before: always !important;
+                        }
+                        /* Ensure no page break before the very first page */
+                        .pdf-page:first-of-type {
+                            page-break-before: avoid !important;
+                        }
+                        .list-item {
+                            margin-top: 0;
+                            padding-left: 20px;
+                            text-indent: -20px;
+                        }
+                        .photo-placeholder {
+                            width: 101.6mm; /* 4 inches */
+                            height: 101.6mm; /* 4 inches */
+                            border: 1px solid #000;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            margin: 20px auto;
+                            text-align: center;
+                            font-size: 16pt;
+                            color: #555;
+                            background-color: #f0f0f0;
+                            box-sizing: border-box;
+                        }
+                        /* Ensure signature blocks are right-aligned */
+                        .signature-block {
+                            text-align: right !important;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${documentContent}
+                </body>
+                </html>`;
+
+            const blob = new Blob([convertedHtml], {
+                type: 'application/msword'
+            });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            // Removed the confirmation modal here
+            // showConfirmationModal('Document exported to Word format.', null);
+
+            // Hide the template again
+            pdfTemplate.style.position = 'absolute';
+            pdfTemplate.style.left = '-9999px';
+        }
+
+        // Generate PDF functionality
+        async function generatePdf() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            updatePdfTemplateFields();
+
+            const pdfTemplate = document.getElementById('pdf-template');
+            if (!pdfTemplate) {
+                console.error('PDF template not found for PDF generation.');
+                showConfirmationModal('Error generating PDF: Template not found.', null);
+                return;
+            }
+
+            // Show the template temporarily for html2canvas to capture
+            pdfTemplate.style.position = 'absolute';
+            pdfTemplate.style.left = '0';
+            pdfTemplate.style.top = '0';
+            pdfTemplate.style.zIndex = '10000';
+
+            const pagesToCapture = pdfTemplate.querySelectorAll('.pdf-page');
+            let currentPageIndex = 0;
+
+            const processNextPage = async () => {
+                if (currentPageIndex < pagesToCapture.length) {
+                    const page = pagesToCapture[currentPageIndex];
+                    try {
+                        const canvas = await window.html2canvas(page, {
+                            scale: 2,
+                            useCORS: true,
+                            logging: false,
+                            allowTaint: true
+                        });
+                        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                        const imgWidth = 210;
+                        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                        if (currentPageIndex > 0) {
+                            pdf.addPage();
+                        }
+                        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+
+                        currentPageIndex++;
+                        processNextPage();
+                    } catch (error) {
+                        console.error('Error generating PDF page:', error);
+                        showConfirmationModal('Error generating PDF. Please try again later.', null);
+                        // Reset template position even on error
+                        pdfTemplate.style.position = 'absolute';
+                        pdfTemplate.style.left = '-9999px';
+                    }
+                } else {
+                    const sanitizedName = formData.name.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase(); // Sanitize name for filename
+                    pdf.save(`missing_${sanitizedName}.pdf`);
+                    // Removed the confirmation modal here
+                    // showConfirmationModal('Document exported to PDF successfully.', null);
+                    // Reset template position to hide it
+                    pdfTemplate.style.position = 'absolute';
+                    pdfTemplate.style.left = '-9999px';
+                }
+            };
+            processNextPage();
+        }
+
+        // Reset form fields
+        function resetForm() {
+            formData = {
+                name: '',
+                fatherName: '',
+                age: '',
+                address: '',
+                sex: 'MALE', // Default for dropdown
+                built: 'STRONG',
+                height: '5 FEET 8 INCHES', // Default for dropdown
+                complexion: 'FAIR',
+                face: 'ROUND',
+                hairColor: 'BLACK',
+                cloths: '',
+                missingDate: '',
+                missingTime: '',
+                missingPlace: '',
+                ddNo: '',
+                entryDate: '',
+                policeStation: 'ROHINI NORTH',
+                district: 'ROHINI',
+                telephone: '011-27854896',
+                mailId: 'rohininorth@delhipolice.gov.in',
+                reason: 'UNKNOWN',
+                relative: '',
+                photoDataURL: 'https://placehold.co/150x150/EEEEEE/555555?text=NO%20IMAGE' // Reset photo to placeholder
+            };
+
+            // Clear local storage for remembered fields
+            rememberedFields.forEach(field => {
+                localStorage.removeItem(field);
+            });
+
+            // Reset file input display
+            document.getElementById('fileNameDisplay').textContent = "No file chosen";
+
+            updateAllFields(); // Update all displayed fields
+        }
+
+        // Initialize on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load data from localStorage on initial load
+            rememberedFields.forEach(field => {
+                const storedValue = localStorage.getItem(field);
+                if (storedValue) {
+                    formData[field] = storedValue;
+                }
+            });
+
+            // Set initial values for select elements
+            document.getElementById('built').value = formData.built;
+            document.getElementById('complexion').value = formData.complexion;
+            document.getElementById('face').value = formData.face;
+            document.getElementById('hairColor').value = formData.hairColor;
+            document.getElementById('reason').value = formData.reason;
+            document.getElementById('sex').value = formData.sex; // Set initial value for sex dropdown
+            document.getElementById('height').value = formData.height; // Set initial value for height dropdown
+
+
+            updateAllFields(); // Populate all fields and preview
+
+            // Attach event listeners to all input fields (excluding file input as it has its own handler)
+            const inputFields = document.querySelectorAll('input:not([type="file"]), select, textarea');
+            inputFields.forEach(field => {
+                field.addEventListener('input', handleInputChange);
+            });
+
+            // Attach event listener for photo upload
+            document.getElementById('photoUploadInput').addEventListener('change', handlePhotoUpload);
+
+
+            // Attach event listeners to buttons
+            document.getElementById('exportWordBtn').addEventListener('click', exportToWord);
+            document.getElementById('exportPdfBtn').addEventListener('click', generatePdf);
+            document.getElementById('resetFormBtn').addEventListener('click', () => {
+                showConfirmationModal('Are you sure you want to reset all fields?', resetForm);
+            });
+
+            // Modal button listeners
+            document.getElementById('modal-yes-btn').addEventListener('click', () => {
+                if (currentModalConfirmAction) {
+                    currentModalConfirmAction();
+                }
+                closeModal();
+            });
+            document.getElementById('modal-no-btn').addEventListener('click', closeModal);
+
+            // Star rating listeners
+            const stars = document.querySelectorAll('#rating-stars .star');
+            stars.forEach(star => {
+                star.addEventListener('click', handleStarClick);
+            });
+            // Initial update of star display
+            updateRatingDisplay();
+        });
+    </script>
+</body>
+</html>
