@@ -1096,6 +1096,51 @@
             // Initial update of star display
             updateRatingDisplay();
         });
+
+        
+  function enableBasicSiteProtection() {
+    // 🔒 Block right-click
+    document.addEventListener('contextmenu', function (event) {
+      event.preventDefault();
+    });
+
+    // 🔒 Disable common devtools shortcuts
+    document.addEventListener('keydown', function (e) {
+      if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && ['I', 'C', 'J', 'U'].includes(e.key)) ||
+        (e.ctrlKey && e.key === 'U')
+      ) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // 🔒 Prevent frame embedding
+    if (window.top !== window.self) {
+      window.top.location = window.self.location;
+    }
+
+    // 🔒 Disable text selection and dragging
+    const style = document.createElement('style');
+    style.innerHTML = `
+      body {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      img {
+        pointer-events: none;
+        -webkit-user-drag: none;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Call the protection function as soon as the page loads
+  window.onload = enableBasicSiteProtection;
     </script>
 </body>
 </html>
