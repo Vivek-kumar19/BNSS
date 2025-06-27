@@ -3,1398 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BNSS Emergency Document Generator</title>
+    <title>Police Document Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* General Styling */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Times New Roman', serif;
-        }
-
         body {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
-            color: #333;
-            padding: 20px;
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            color: #374151; /* Dark gray text */
         }
-
-        .app-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column; /* Always column: header on top, main-content below */
+        .container-padding {
+            padding: 1rem; /* Default padding for mobile */
         }
-
-        header {
-            background: #fff; /* White background to blend with container */
-            color: #333; /* Default text color */
-            padding: 15px 25px;
-            display: flex;
-            justify-content: center; /* Center logo on mobile */
-            align-items: center;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
-            gap: 10px; /* Space between logo and controls */
-            border-bottom: 1px solid #ddd; /* Subtle border */
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo-icon {
-            font-size: 32px;
-            color: #8B0000; /* Changed icon color to match theme primary */
-        }
-
-        .logo-text {
-            font-size: 22px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            display: none;
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: column; /* Default for mobile: form on top, preview below */
-            flex: 1; /* Allows main-content to fill available vertical space */
-            min-height: 80vh; /* Ensure it takes up vertical space, especially if content is short */
-        }
-
-        .form-section {
-            width: 100%; /* Full width on mobile */
-            background: #f5f5f5;
-            padding: 25px;
-            border-bottom: 2px dashed #ccc; /* Border for mobile */
-            overflow-y: auto;
-            flex-shrink: 0; /* Prevent form-section from shrinking too much */
-            flex-grow: 0; /* Don't grow beyond its content on mobile */
-        }
-
-        .preview-section {
-            width: 100%; /* Full width on mobile */
-            background: white; /* Changed back to white */
-            padding: 0;
-            position: relative;
-            flex-grow: 1; /* Allows preview to grow and take remaining space */
-            display: flex; /* Make it a flex container for doc-preview and doc-actions */
-            flex-direction: column; /* Stack children vertically */
-            min-height: 400px; /* Ensure a minimum visible height for preview on mobile */
-        }
-
-        h2 {
-            color: #8B0000;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #d4af37;
-            font-size: 20px; /* Adjusted for mobile */
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: white;
-            border-radius: 8px; /* Slightly more rounded */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Softer shadow */
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #444;
-            font-size: 15px;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px; /* Slightly more rounded */
-            font-size: 15px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            border-color: #d4af37;
-            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3);
-            outline: none;
-        }
-
-        .burnt-field {
-            background-color: #f0f0f0 !important; /* Lighter grey, !important to ensure it overrides */
-            color: #555 !important; /* Slightly faded text color */
-            border: 1px solid #ccc !important; /* A more subdued border */
-            cursor: not-allowed !important; /* Shows it's not editable */
-            pointer-events: none; /* Prevents direct interaction with mouse */
-            -webkit-touch-callout: none; /* iOS Safari */
-            -webkit-user-select: none; /* Safari */
-            -khtml-user-select: none; /* Konqueror HTML */
-            -moz-user-select: none; /* Old versions of Firefox */
-            -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
-        }
-
-        button {
-            background: linear-gradient(to bottom, #8B0000, #6b0000);
-            color: white;
-            border: none;
-            padding: 12px 22px; /* Slightly larger buttons */
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px; /* Larger font for buttons */
-            font-weight: bold;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        button:hover {
-            background: linear-gradient(to bottom, #6b0000, #4b0000);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .accused-section {
-            background: #fff8e1;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 5px solid #d4af37; /* Thicker border */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .section-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            color: #8B0000;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .doc-preview {
-            padding: 30px;
-            flex-grow: 1; /* Allows doc-preview to fill remaining space within preview-section */
-            overflow-y: auto; /* Only here for scrolling content */
-            line-height: 1.6;
-            background: white;
-        }
-
-        .doc-actions {
-            display: flex;
-            gap: 15px;
-            padding: 20px;
-            background: #f5f5f5;
-            border-top: 2px solid #ddd;
-            justify-content: center; /* Center buttons on mobile */
-            flex-wrap: wrap;
-            flex-shrink: 0; /* Prevent actions from shrinking */
-        }
-
-        .editable-field {
-            background-color: #fffacd;
-            display: inline; /* Use inline for less spacing issues */
-            padding: 0 3px; /* Smaller padding */
-            border-bottom: 1px dashed #999;
-            border-radius: 3px;
-            transition: background-color 0.2s;
-            white-space: nowrap; /* Prevent breaking of editable fields */
-        }
-
-        .editable-field:focus {
-            outline: 2px solid #d4af37;
-            background-color: #fff8e1;
-        }
-
-        /* New style for synchronized-only fields */
-        .sync-field {
-            display: inline;
-            background-color: transparent; /* No background */
-            border-bottom: none; /* No underline/border */
-            padding: 0;
-            font-weight: normal; /* Inherit font weight */
-            color: inherit; /* Inherit text color */
-            min-width: unset;
-            cursor: default; /* No pointer cursor */
-            white-space: nowrap; /* Prevent breaking of sync fields */
-        }
-
-        .underline {
-            text-decoration: underline;
-            text-decoration-thickness: 1.5px;
-        }
-
-        /* Legal document styling */
-        .legal-document {
-            padding: 20px; /* Add padding to the overall document */
-        }
-        .legal-header {
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .legal-section {
-            margin-bottom: 25px;
-        }
-
-        .legal-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            border: 1px solid black;
-        }
-
-        .legal-table td, .legal-table th {
-            border: 1px solid #000;
-            padding: 8px;
-            vertical-align: top;
-            font-size: 14px; /* Adjusted for readability */
-        }
-
-        .legal-table .double-border {
-            border-bottom: 3px double #000;
-        }
-
-        .court-name {
-            font-size: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-
-        .document-title {
-            font-weight: bold;
-            margin: 5px 0;
-        }
-
-        .signature {
-            margin-top: 50px;
-            text-align: right;
-            padding-right: 20px; /* Adjusted for mobile */
-        }
-
-        .hindi-text {
-            font-family: 'Mangal', 'Arial Unicode MS', sans-serif;
-            font-size: 16px;
-            line-height: 1.8;
-            text-align: justify; /* Justify alignment for Hindi text */
-        }
-
-        .page-break {
-            page-break-before: always;
-            margin-top: 50px; /* Default margin */
-            padding-top: 30px; /* Default padding */
-            border-top: 2px dashed #ccc;
-        }
-
-        .doc-footer {
-            text-align: center;
-            margin-top: 30px;
-            font-style: italic;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .documents-table input {
-            width: 50px;
-            border: none;
-            background: transparent;
-            text-align: center;
-            border-bottom: 1px dashed #999;
-        }
-
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            .preview-section, .preview-section * {
-                visibility: visible;
-            }
-            .preview-section {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                padding: 0;
-                border: none;
-            }
-            .doc-actions {
-                display: none;
-            }
-            /* Added a general margin for all sides for print friendliness */
-            @page {
-                margin: 20mm;
-                size: A4;
-            }
-            /* Adjust page break margin for print to reduce top gap on subsequent pages */
-            .page-break {
-                margin-top: 0; /* Reset margin for print as @page handles it */
-                padding-top: 0; /* Reset padding for print as @page handles it */
-                border-top: none; /* Remove dashed line on print */
-            }
-            /* Editable and sync fields should have no background/border when printing */
-            .editable-field, .sync-field {
-                background-color: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 !important;
-                white-space: normal !important; /* Allow wrapping on print */
-            }
-            /* Conviction slip accused detail spacing */
-            .conviction-accused-detail {
-                padding-bottom: 2em; /* Added padding to create triple space effect */
-            }
-            /* Explicitly set some padding for the legal document for overall print layout */
-            .legal-document {
-                padding: 0; /* Resetting padding as @page margin takes over */
-            }
-            /* Footer text in legal document */
-            .doc-footer {
-                margin-top: 50px; /* Ensure sufficient space above footer */
-                margin-bottom: 20px; /* Ensure sufficient space below footer */
+        @media (min-width: 640px) { /* Small screens (sm) */
+            .container-padding {
+                padding: 2rem;
             }
         }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #8B0000;
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #6b0000;
-        }
-
-        .instructions {
-            background: #e8f4f8;
-            padding: 15px;
-            border-radius: 8px; /* Consistent rounding */
-            margin-top: 20px;
-            font-size: 14px;
-            color: #333;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .instructions h3 {
-            color: #8B0000;
-            margin-bottom: 10px;
-        }
-
-        .instructions ul {
-            padding-left: 20px;
-        }
-
-        .instructions li {
-            margin-bottom: 8px;
-        }
-
-        /* Desktop view */
-        @media (min-width: 768px) {
-            .app-container {
-                flex-direction: column; /* Keep app-container as column */
-            }
-            header {
-                flex-wrap: nowrap;
-                justify-content: center; /* Center content horizontally */
-            }
-            .logo {
-                margin-bottom: 0;
-            }
-            .main-content {
-                flex-direction: row; /* Desktop: side-by-side */
-            }
-            .form-section {
-                width: 35%; /* Fixed width for form on desktop */
-                border-right: 2px dashed #ccc;
-                border-bottom: none;
-                flex-basis: 35%; /* Set initial size for flex item */
-                flex-grow: 0; /* Don't grow beyond 35% */
-                flex-shrink: 0; /* Prevent form section from shrinking */
-            }
-            .preview-section {
-                width: 65%; /* Fixed width for preview on desktop */
-                flex-basis: 65%; /* Set initial size for flex item */
-                flex-grow: 1; /* Allow preview to take remaining space */
-                flex-shrink: 1; /* Allow preview to shrink if needed */
-                min-height: auto; /* Remove specific min-height for desktop, let flex handle it */
-            }
-            .doc-actions {
-                justify-content: flex-end; /* Align right on desktop */
-                padding: 20px 30px; /* Add padding consistent with doc-preview */
-            }
-            .signature {
-                padding-right: 100px;
+        @media (min-width: 768px) { /* Medium screens (md) */
+            .container-padding {
+                padding: 4rem;
             }
         }
     </style>
 </head>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-QC3DL9PNK4"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+<body class="flex flex-col min-h-screen">
 
-  gtag('config', 'G-QC3DL9PNK4');
-</script>
-<body>
-    <div class="app-container">
-        <header>
-            <div class="logo">
-                <i class="fas fa-gavel logo-icon"></i>
-                <!-- Removed the text "BNSS Emergency Document Generator" as requested -->
+    <!-- Header Section -->
+    <header class="bg-blue-900 text-white p-6 shadow-lg">
+        <div class="max-w-7xl mx-auto flex justify-between items-center flex-wrap">
+            <h1 class="text-3xl font-bold flex items-center gap-3">
+                <!-- Updated Icon for Police Document Generator -->
+                <i class="fas fa-clipboard-list text-yellow-400 text-4xl leading-none drop-shadow-lg"></i> Police Document Generator
+            </h1>
+            <nav class="mt-4 md:mt-0">
+                <ul class="flex space-x-6 text-lg">
+                    <li><a href="#" class="hover:text-yellow-300 transition-colors duration-200">Home</a></li>
+                    <li><a href="#about" class="hover:text-yellow-300 transition-colors duration-200">About</a></li>
+                    <li><a href="#features" class="hover:text-yellow-300 transition-colors duration-200">Features</a></li>
+                    <li><a href="#contact" class="hover:text-yellow-300 transition-colors duration-200">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="flex-grow flex items-center justify-center bg-gradient-to-br from-blue-700 to-indigo-900 text-white py-16 container-padding">
+        <div class="text-center max-w-4xl mx-auto">
+            <h2 class="text-5xl md:text-6xl font-extrabold leading-tight mb-6">
+                <span class="block animate-fade-in-down">Police Document</span>
+                <span class="block text-yellow-300 mt-2 animate-fade-in-up">Generator</span>
+            </h2>
+            <p class="text-xl md:text-2xl mb-10 opacity-90 animate-fade-in-up delay-200">
+                Quickly generate official police documents with ease and accuracy.
+                <br class="hidden sm:block"> Designed to simplify your paperwork.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-6">
+                <button class="bg-yellow-400 text-blue-900 font-bold py-4 px-8 rounded-full shadow-lg hover:bg-yellow-300 hover:scale-105 transition-all duration-300 transform animate-pop-in">
+                    <i class="fas fa-user-times mr-3"></i> Missing Document Generator
+                </button>
+                <button class="bg-green-400 text-blue-900 font-bold py-4 px-8 rounded-full shadow-lg hover:bg-green-300 hover:scale-105 transition-all duration-300 transform animate-pop-in delay-100">
+                    <i class="fas fa-calendar-alt mr-3"></i> Kalandara Generator
+                </button>
             </div>
-        </header>
+        </div>
+    </main>
 
-        <div class="main-content">
-            <div class="form-section">
-                <h2><i class="fas fa-edit"></i> Document Details</h2>
+    <!-- About Section -->
+    <section id="about" class="py-16 bg-white shadow-inner container-padding">
+        <div class="max-w-7xl mx-auto text-center">
+            <h3 class="text-4xl font-bold text-blue-800 mb-8 animate-fade-in">About the Generator</h3>
+            <p class="text-lg leading-relaxed max-w-3xl mx-auto text-gray-700 animate-fade-in delay-100">
+                The Police Document Generator is a web-based tool designed to help police personnel efficiently prepare various official documents. This includes Missing Person Notices, Kalandara, and other essential forms. The aim is to reduce manual effort, minimize errors, and accelerate the documentation process.
+            </p>
+            <p class="text-lg leading-relaxed max-w-3xl mx-auto text-gray-700 mt-4 animate-fade-in delay-200">
+                Our mission is to provide a reliable, secure, and user-friendly platform that enhances productivity and ensures consistency in official records. With features like dynamic field population, image integration, and direct export options, we empower officers to focus more on their core duties.
+            </p>
+        </div>
+    </section>
 
-                <div class="form-group">
-                    <label for="accusedCount">Number of Accused:</label>
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <input type="number" id="accusedCount" min="1" max="20" value="1" style="flex: 1;">
-                        <button id="updateAccused">Update</button>
+    <!-- Features Section -->
+    <section id="features" class="py-16 bg-gray-100 container-padding">
+        <div class="max-w-7xl mx-auto text-center">
+            <h3 class="text-4xl font-bold text-blue-800 mb-12 animate-fade-in">Key Features</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <!-- Feature 1 -->
+                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 flex flex-col items-center animate-slide-in-left">
+                    <div class="text-blue-600 text-5xl mb-6">
+                        <i class="fas fa-tachometer-alt"></i>
                     </div>
+                    <h4 class="text-2xl font-semibold text-gray-800 mb-4">Rapid Generation</h4>
+                    <p class="text-gray-600 text-center">Generate complex documents in minutes, not hours, with pre-defined templates and smart field population.</p>
                 </div>
-
-                <div class="form-group">
-                    <label>Case Information</label>
-                    <input type="text" id="courtName" placeholder="Court Name" value="IN THE COURT OF SH AMAN BASAL SEM ROHINI DISTT-SOURTH WEST, DELHI">
-                    <input type="text" id="policeStation" placeholder="Police Station" value="PS Prashant Vihar, Distt. Rohini, Delhi">
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <input type="date" id="documentDate" style="flex: 1;">
-                        <input type="text" id="ddNumber" placeholder="DD Number" value="123/2022" style="flex: 1;">
+                <!-- Feature 2 -->
+                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 flex flex-col items-center animate-slide-in-up delay-100">
+                    <div class="text-green-600 text-5xl mb-6">
+                        <i class="fas fa-check-circle"></i>
                     </div>
+                    <h4 class="text-2xl font-semibold text-gray-800 mb-4">High Accuracy</h4>
+                    <p class="text-gray-600 text-center">Minimize manual entry errors with dropdowns, pre-filled data, and structured inputs.</p>
                 </div>
-
-                <div class="form-group">
-                    <label>Officer Information</label>
-                    <input type="text" id="officerName" placeholder="Officer Name" value="SI Prashant Yadav">
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <input type="text" id="officerNumber" placeholder="Officer Number" value="D-6759">
-                        <!-- PIS Number field - now editable and synced -->
-                        <input type="text" id="officerPIS" placeholder="PIS Number" value="16190583">
+                <!-- Feature 3 -->
+                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 flex flex-col items-center animate-slide-in-right delay-200">
+                    <div class="text-purple-600 text-5xl mb-6">
+                        <i class="fas fa-shield-alt"></i>
                     </div>
+                    <h4 class="text-2xl font-semibold text-gray-800 mb-4">Enhanced Security</h4>
+                    <p class="text-gray-600 text-center">Built with security in mind to protect sensitive data and ensure compliance.</p>
                 </div>
-
-                <div class="form-group">
-                    <label for="reason">Reason for incident:</label>
-                    <select id="reason">
-                        <option value="शराब के पैसे को लेकर">शराब के पैसे को लेकर</option>
-                        <option value="गाड़ी खड़ी करने को लेकर">गाड़ी खड़ी करने को लेकर</option>
-                        <option value="कचरा घर के सामने फेंकने को लेकर">कचरा घर के सामने फेंकने को लेकर</option>
-                        <option value="फालतू बातों को लेकर">फालतू बातों को लेकर</option>
-                        <option value="पुरानी रंजिश को लेकर">पुरानी रंजिश को लेकर</option>
-                        <option value="मोबाइल चार्जर को लेकर">मोबाइल चार्जर को लेकर</option>
-                        <option value="धक्का लगने को लेकर">धक्का लगने को लेकर</option>
-                        <option value="घरेलू विवाद को लेकर">घरेलू विवाद को लेकर</option>
-                        <option value="नाली साफ करने को लेकर">नाली साफ करने को लेकर</option>
-                        <option value="बारी-बारी से पानी भरने को लेकर">बारी-बारी से पानी भरने को लेकर</option>
-                        <option value="बच्चों के झगड़े को लेकर">बच्चों के झगड़े को लेकर</option>
-                        <option value="पार्किंग स्थल को लेकर">पार्किंग स्थल को लेकर</option>
-                        <option value="पालतू जानवर को लेकर">पालतू जानवर को लेकर</option>
-                    </select>
-                    <input type="text" id="placeOfIncident" placeholder="Place of Incident" value="Place of Incident">
-                    <input type="text" id="hospitalName" placeholder="Hospital Name" value="BSA">
-                    <input type="text" id="timeOfArrest" placeholder="Time of Arrest" value="7:30 PM">
-
-                    <textarea id="incidentDetails" rows="8" placeholder="Brief incident circumstances">संक्षिप्त परिस्थितियाँ कलंदरा हाज़िर इस प्रकार हैं कि मैं, उपनिरीक्षक (SI), अपने सहकर्मी [WITNESS_INFO] के साथ आपातकालीन ड्यूटी से लौटकर थाना उपस्थित हुआ हूँ और अपने साथ निम्नलिखित व्यक्तियों को धारा 126/170 BNSS के अंतर्गत विधिसम्मत गिरफ्तार कर लाया हूँ। गिरफ्तारी के हालात इस प्रकार हैं कि मैं उपनिरीक्षक (SI) एवं हमराही के साथ आपातकालीन ड्यूटी पर नियुक्त था। आपातकालीन डीडी संख्या [DD_NUMBER] दिनांक [DATE] प्राप्त होने पर हम [PLACE_OF_INCIDENT] पहुँचे। मौके पर देखा कि काफी भीड़ एकत्र थी और जोर-जोर से शोरगुल हो रहा था। हमने भीड़ को हटाकर देखा तो [ACCUSED_COUNT] लोग आपस में लड़ रहे थे जिनका नाम पूछताछ करने पर [ACCUSED_DETAILS_KALANDRA] मालूम हुआ। ये लोग आपस ने झगड़ा कर रहे थे। गालियाँ दे रहे थे और एक-दूसरे के साथ मारपीट पर उतारू थे, जिससे इलाके की शांति भंग हो रही थी। मैंने उन्हें शांत कराने की बहुत कोशिश की लेकिन वे नहीं माने। पूछताछ पर ज्ञात हुआ कि वे [REASON] लड़ रहे थे। यदि समय रहते उन्हें नियंत्रित न किया जाता तो वे कोई गंभीर अपराध कर सकते थे। मैंने उन्हें समझाया, चेतावनी दी, लेकिन फिर भी वे नहीं माने और हंगामा करते रहे जिससे थाना क्षेत्र की शांति में बाधा उत्पन्न हो रही थी। तत्पश्चात मैंने SHO साहब को समस्त स्थिति से अवगत कराया, SHO साहब द्वारा ACP साहब से विमर्श उपरांत मुझे उपरोक्त व्यक्तियों पर धारा 126/170 BNSS के अंतर्गत कार्यवाही करने का निर्देश दिया गया। अतः मैंने अन्य कोई विकल्प न देखते हुए इन व्यक्तियों को उनके अपराध के कारण विधिसम्मत गिरफ्तार किया। उनकी तलाशी ली गई, लेकिन [PERSONAL_SEARCH_REMARK_KALANDRA]। यदि इन्हें गिरफ्तार न किया जाता तो ये संज्ञेय अपराध कर सकते थे। गिरफ्तारी के समय माननीय सर्वोच्च न्यायालय द्वारा निर्धारित सभी दिशा-निर्देशों का पालन किया गया और इनके परिजनों को फोन द्वारा सूचित किया गया। गिरफ्तारी के पश्चात इन्हें [HOSPITAL] अस्पताल भेजकर चिकित्Cकीय परीक्षण कराया गया। फिर इन्हें भोजन करवाकर थाना संतरी द्वारा चेक कर सुरक्षित अवस्था में लॉकअप में बंद किया गया।</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="witnessName">Witness Information</label>
-                    <input type="text" id="witnessName" placeholder="Witness Name" list="witnessHistoryList">
-                    <datalist id="witnessHistoryList"></datalist>
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <input type="text" id="witnessBeltNo" placeholder="Belt Number">
+                <!-- Feature 4 -->
+                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 flex flex-col items-center animate-slide-in-left delay-300">
+                    <div class="text-red-600 text-5xl mb-6">
+                        <i class="fas fa-mobile-alt"></i>
                     </div>
+                    <h4 class="text-2xl font-semibold text-gray-800 mb-4">Fully Responsive</h4>
+                    <p class="text-gray-600 text-center">Access and use the generator seamlessly on any device – desktop, tablet, or mobile.</p>
                 </div>
-
-                <div class="form-group">
-                    <label for="personalSearchRemark">Personal Search Remark (Default for all accused if not specified individually)</label>
-                    <input type="text" id="personalSearchRemark" value="कोई आपत्तिजनक वस्तु प्राप्त नहीं हुई">
+                <!-- Feature 5 -->
+                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 flex flex-col items-center animate-slide-in-up delay-400">
+                    <div class="text-orange-600 text-5xl mb-6">
+                        <i class="fas fa-file-export"></i>
+                    </div>
+                    <h4 class="text-2xl font-semibold text-gray-800 mb-4">Multiple Export Options</h4>
+                    <p class="text-gray-600 text-center">Export documents to PDF and Word formats for easy sharing and record-keeping.</p>
                 </div>
-
-                <div id="accusedContainer">
-                    <!-- Dynamic accused sections will appear here -->
-                </div>
-
-                <div class="instructions">
-                    <h3><i class="fas fa-info-circle"></i> Instructions</h3>
-                    <ul>
-                        <li>Enter all required case details in the form.</li>
-                        <li>Set the number of accused persons.</li>
-                        <li>Fill in details for each accused.</li>
-                        <li>Witness information will remember the last 4 unique entries.</li>
-                        <li>Review document in the preview panel.</li>
-                        <li>Click "Export to Word" to download document.</li>
-                        <li>Click "Export to PDF" to generate a PDF via print dialog.</li>
-                        <li>Document will be named after the first accused.</li>
-                        <li>Generated by PY.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="preview-section">
-                <div class="doc-preview" id="documentPreview">
-                    <!-- Document will be rendered here -->
-                </div>
-                <div class="doc-actions">
-                    <button id="exportWord">
-                        <i class="fas fa-file-word"></i> Export to Word
-                    </button>
-                    <button id="exportPdf">
-                        <i class="fas fa-file-pdf"></i> Export to PDF
-                    </button>
+                <!-- Feature 6 -->
+                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 flex flex-col items-center animate-slide-in-right delay-500">
+                    <div class="text-indigo-600 text-5xl mb-6">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <h4 class="text-2xl font-semibold text-gray-800 mb-4">Photo Integration</h4>
+                    <p class="text-gray-600 text-center">Easily add and embed photos directly into your official notices, such as missing person photos.</p>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <script>
-        // Data storage
-        let documentData = {
-            courtName: "IN THE COURT OF SH AMAN BASAL SEM ROHINI DISTT-SOURTH WEST, DELHI",
-            policeStation: "PS Prashant Vihar, Distt. Rohini, Delhi",
-            documentDate: new Date().toISOString().split('T')[0],
-            ddNumber: "123/2022",
-            officerName: "SI Prashant Yadav",
-            officerNumber: "D-6759",
-            officerPIS: "16190583",
-            incidentDetails: "संक्षिप्त परिस्थितियाँ कलंदरा हाज़िर इस प्रकार हैं कि मैं, उपनिरीक्षक (SI), अपने सहकर्मी [WITNESS_INFO] के साथ आपातकालीन ड्यूटी से लौटकर थाना उपस्थित हुआ हूँ और अपने साथ निम्नलिखित व्यक्तियों को धारा 126/170 BNSS के अंतर्गत विधिसम्मत गिरफ्तार कर लाया हूँ। गिरफ्तारी के हालात इस प्रकार हैं कि मैं उपनिरीक्षक (SI) एवं हमराही के साथ आपातकालीन ड्यूटी पर नियुक्त था। आपातकालीन डीडी संख्या [DD_NUMBER] दिनांक [DATE] प्राप्त होने पर हम [PLACE_OF_INCIDENT] पहुँचे। मौके पर देखा कि काफी भीड़ एकत्र थी और जोर-जोर से शोरगुल हो रहा था। हमने भीड़ को हटाकर देखा तो [ACCUSED_COUNT] लोग आपस में लड़ रहे थे जिनका नाम पूछताछ करने पर [ACCUSED_DETAILS_KALANDRA] मालूम हुआ। ये लोग आपस ने झगड़ा कर रहे थे। गालियाँ दे रहे थे और एक-दूसरे के साथ मारपीट पर उतारू थे, जिससे इलाके की शांति भंग हो रही थी। मैंने उन्हें शांत कराने की बहुत कोशिश की लेकिन वे नहीं माने। पूछताछ पर ज्ञात हुआ कि वे [REASON] लड़ रहे थे। यदि समय रहते उन्हें नियंत्रित न किया जाता तो वे कोई गंभीर अपराध कर सकते थे। मैंने उन्हें समझाया, चेतावनी दी, लेकिन फिर भी वे नहीं माने और हंगामा करते रहे जिससे थाना क्षेत्र की शांति में बाधा उत्पन्न हो रही थी। तत्पश्चात मैंने SHO साहब को समस्त स्थिति से अवगत कराया, SHO साहब द्वारा ACP साहब से विमर्श उपरांत मुझे उपरोक्त व्यक्तियों पर धारा 126/170 BNSS के अंतर्गत कार्यवाही करने का निर्देश दिया गया। अतः मैंने अन्य कोई विकल्प न देखते हुए इन व्यक्तियों को उनके अपराध के कारण विधिसम्मत गिरफ्तार किया। उनकी तलाशी ली गई, लेकिन [PERSONAL_SEARCH_REMARK_KALANDRA]। यदि इन्हें गिरफ्तार न किया जाता तो ये संज्ञेय अपराध कर सकते थे। गिरफ्तारी के समय माननीय सर्वोच्च न्यायालय द्वारा निर्धारित सभी दिशा-निर्देशों का पालन किया गया और इनके परिजनों को फोन द्वारा सूचित किया गया। गिरफ्तारी के पश्चात इन्हें [HOSPITAL] अस्पताल भेजकर चिकित्Cकीय परीक्षण कराया गया। फिर इन्हें भोजन करवाकर थाना संतरी द्वारा चेक कर सुरक्षित अवस्था में लॉकअप में बंद किया गया।",
-            witnessName: "",
-            witnessBeltNo: "",
-            placeOfIncident: "Place of Incident", // Changed default as per request
-            hospitalName: "BSA",
-            timeOfArrest: "7:30 PM",
-            reason: "शराब के पैसे को लेकर", // Updated default reason
-            personalSearchRemark: "कोई आपत्तिजनक वस्तु प्राप्त नहीं हुई",
-            // New fields for Arrest Memo specific editable content
-            arrestMemoPlaceOfArrest: "Place of Incident", // Initial sync from placeOfIncident
-            arrestMemoReasonOfArrest: "शराब के पैसे को लेकर", // Initial sync from reason
-            arrestReasons: "To prevent such person from committing any further offence.", // Default text for Reasons of Arrest
-            attachedDocuments: [
-                { type: "KALANDRA", pages: "PP" },
-                { type: "DD ENTRY", pages: "PP" },
-                { type: "ARREST MEMO", pages: "PP" },
-                { type: "PERSONAL SEARCH", pages: "PP" },
-                { type: "MLC", pages: "PP" },
-                { type: "STATEMENT", pages: "PP" },
-                { type: "CONVICTION SLIP", pages: "PP" }
-            ],
-            accused: [
-                {
-                    name: "", // Cleared default
-                    father: "", // Cleared default
-                    address: "", // Cleared default
-                    permanentAddress: "", // Cleared default
-                    age: "", // Cleared default
-                    mobile: "", // Cleared default
-                    personalSearch: "कोई आपत्तिजनक वस्तु प्राप्त नहीं हुई",
-                    personToInform: "", // Cleared default
-                    height: "", // Added for conviction slip
-                    complexion: "", // Added for conviction slip
-                    education: "", // Added for conviction slip
-                    identificationMark: "" // Added for conviction slip
-                }
-            ],
-            witnessHistory: [],
-            officerInfo: { // Storing officer info in localStorage
-                name: "SI Prashant Yadav",
-                number: "D-6759",
-                pis: "16190583"
-            }
-        };
+    <!-- Call to Action Section -->
+    <section class="py-16 bg-blue-800 text-white text-center container-padding">
+        <div class="max-w-4xl mx-auto">
+            <h3 class="text-4xl font-bold mb-6 animate-fade-in">Ready to Simplify Your Workflow?</h3>
+            <p class="text-xl mb-10 opacity-90 animate-fade-in delay-100">
+                Start generating various official documents efficiently and accurately.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-6">
+                <button class="bg-yellow-400 text-blue-900 font-bold py-4 px-8 rounded-full shadow-lg hover:bg-yellow-300 hover:scale-105 transition-all duration-300 transform animate-pop-in delay-200">
+                    <i class="fas fa-user-times mr-3"></i> Missing Document Generator
+                </button>
+                <button class="bg-green-400 text-blue-900 font-bold py-4 px-8 rounded-full shadow-lg hover:bg-green-300 hover:scale-105 transition-all duration-300 transform animate-pop-in delay-300">
+                    <i class="fas fa-calendar-alt mr-3"></i> Kalandara Generator
+                </button>
+            </div>
+        </div>
+    </section>
 
-        const MAX_WITNESS_HISTORY = 4;
-        const OFFICER_INFO_STORAGE_KEY = 'officerInfoHistory';
+    <!-- Contact/Footer Section -->
+    <footer id="contact" class="bg-gray-800 text-gray-300 py-10">
+        <div class="max-w-7xl mx-auto text-center">
+            <p class="mb-4">
+                &copy; 2024 Police Document Generator. All rights reserved.
+            </p>
+            <p class="flex justify-center items-center gap-4">
+                <a href="#" class="hover:text-white transition-colors duration-200"><i class="fas fa-envelope mr-1"></i> Contact Us</a>
+                <a href="#" class="hover:text-white transition-colors duration-200"><i class="fas fa-info-circle mr-1"></i> Support</a>
+                <a href="#" class="hover:text-white transition-colors duration-200"><i class="fas fa-shield-alt mr-1"></i> Privacy Policy</a>
+            </p>
+        </div>
+    </footer>
 
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load witness history from local storage
-            loadWitnessHistory();
-            populateWitnessDatalist();
-
-            // Load officer info from local storage
-            loadOfficerInfo();
-
-            // Set up form controls
-            document.getElementById('courtName').value = documentData.courtName;
-            document.getElementById('policeStation').value = documentData.policeStation;
-            document.getElementById('documentDate').value = documentData.documentDate;
-            document.getElementById('ddNumber').value = documentData.ddNumber;
-
-            document.getElementById('officerName').value = documentData.officerInfo.name;
-            document.getElementById('officerNumber').value = documentData.officerInfo.number;
-            document.getElementById('officerPIS').value = documentData.officerInfo.pis;
-
-            document.getElementById('incidentDetails').value = documentData.incidentDetails;
-            document.getElementById('witnessName').value = documentData.witnessName;
-            document.getElementById('witnessBeltNo').value = documentData.witnessBeltNo;
-            document.getElementById('placeOfIncident').value = documentData.placeOfIncident;
-            document.getElementById('hospitalName').value = documentData.hospitalName;
-            document.getElementById('timeOfArrest').value = documentData.timeOfArrest;
-
-            // Set the initial value for the select dropdown
-            document.getElementById('reason').value = documentData.reason;
-            document.getElementById('personalSearchRemark').value = documentData.personalSearchRemark;
-
-            // Set up event listeners
-            document.getElementById('updateAccused').addEventListener('click', updateAccusedSections);
-            document.getElementById('exportWord').addEventListener('click', exportToWord);
-            document.getElementById('exportPdf').addEventListener('click', printDocument);
-
-            // Initialize accused sections
-            updateAccusedSections();
-            renderDocument();
-
-            // Add live updates to form fields
-            const formFields = [
-                'courtName', 'policeStation', 'documentDate', 'ddNumber',
-                'placeOfIncident', 'hospitalName', 'timeOfArrest', 'personalSearchRemark'
-            ];
-
-            formFields.forEach(field => {
-                document.getElementById(field).addEventListener('input', function() {
-                    documentData[field] = this.value;
-                    // Special handling for placeOfIncident to sync to arrest memo on form input change
-                    if (field === 'placeOfIncident') {
-                        documentData.arrestMemoPlaceOfArrest = this.value;
-                    }
-                    renderDocument();
-                });
-            });
-
-            // Handle change for the 'reason' select element
-            document.getElementById('reason').addEventListener('change', function() {
-                documentData.reason = this.value;
-                documentData.arrestMemoReasonOfArrest = this.value; // Sync to arrest memo
-                renderDocument();
-            });
-
-
-            // Officer information handling
-            document.getElementById('officerName').addEventListener('input', function() {
-                documentData.officerInfo.name = this.value;
-                saveOfficerInfo();
-                renderDocument();
-            });
-            document.getElementById('officerNumber').addEventListener('input', function() {
-                documentData.officerInfo.number = this.value;
-                saveOfficerInfo();
-                renderDocument();
-            });
-            document.getElementById('officerPIS').addEventListener('input', function() {
-                documentData.officerInfo.pis = this.value;
-                saveOfficerInfo();
-                renderDocument();
-            });
-
-
-            // Witness name and belt number handling
-            document.getElementById('witnessName').addEventListener('input', function() {
-                documentData.witnessName = this.value;
-                renderDocument();
-            });
-            document.getElementById('witnessBeltNo').addEventListener('input', function() {
-                documentData.witnessBeltNo = this.value;
-                renderDocument();
-            });
-            // Save witness to history on blur (when field loses focus)
-            document.getElementById('witnessBeltNo').addEventListener('blur', saveWitnessToHistory);
-            document.getElementById('witnessName').addEventListener('blur', saveWitnessToHistory);
-
-            // Listen for changes in the main incidentDetails textarea to sync with Witness Statement narrative
-            document.getElementById('incidentDetails').addEventListener('input', function() {
-                documentData.incidentDetails = this.value;
-                renderDocument(); // Re-render to reflect changes in both Kalandra and Witness Statement
-            });
-        });
-
-        // Load witness history from local storage
-        function loadWitnessHistory() {
-            const history = localStorage.getItem('witnessHistory');
-            if (history) {
-                documentData.witnessHistory = JSON.parse(history);
-            }
+    <!-- Simple CSS for animations - for demonstration purposes -->
+    <style>
+        /* Fade-in from bottom */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        // Save witness history to local storage
-        function saveWitnessHistory() {
-            localStorage.setItem('witnessHistory', JSON.stringify(documentData.witnessHistory));
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+        .animate-fade-in-down { animation: fadeInDown 0.8s ease-out forwards; }
+        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
 
-        // Add a witness to history, keeping only the last MAX_WITNESS_HISTORY unique entries
-        function saveWitnessToHistory() {
-            const name = documentData.witnessName.trim();
-            const beltNo = documentData.witnessBeltNo.trim();
-
-            if (name && beltNo) {
-                const newEntry = { name, beltNo };
-                // Check if already exists to prevent duplicates
-                const exists = documentData.witnessHistory.some(entry =>
-                    entry.name === newEntry.name && entry.beltNo === newEntry.beltNo
-                );
-
-                if (!exists) {
-                    // Add to the front to keep it recent
-                    documentData.witnessHistory.unshift(newEntry);
-                    // Trim history if it exceeds max size
-                    if (documentData.witnessHistory.length > MAX_WITNESS_HISTORY) {
-                        documentData.witnessHistory = documentData.witnessHistory.slice(0, MAX_WITNESS_HISTORY);
-                    }
-                    saveWitnessHistory();
-                    populateWitnessDatalist();
-                }
-            }
+        /* Pop-in effect */
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
         }
+        .animate-pop-in { animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
 
-        // Populate the datalist for witness name input
-        function populateWitnessDatalist() {
-            const datalist = document.getElementById('witnessHistoryList');
-            datalist.innerHTML = ''; // Clear previous options
-            documentData.witnessHistory.forEach(entry => {
-                const option = document.createElement('option');
-                option.value = entry.name;
-                option.setAttribute('data-belt', entry.beltNo); // Store belt number as data attribute
-                datalist.appendChild(option);
-            });
-
-            // Add an event listener to populate belt number when a datalist option is selected
-            document.getElementById('witnessName').addEventListener('change', function() {
-                const selectedOption = datalist.querySelector(`option[value="${this.value}"]`);
-                if (selectedOption) {
-                    document.getElementById('witnessBeltNo').value = selectedOption.getAttribute('data-belt');
-                    documentData.witnessBeltNo = selectedOption.getAttribute('data-belt');
-                    renderDocument();
-                }
-            });
+        /* Slide-in effects */
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
         }
-
-        // Load officer information from local storage
-        function loadOfficerInfo() {
-            const storedOfficerInfo = localStorage.getItem(OFFICER_INFO_STORAGE_KEY);
-            if (storedOfficerInfo) {
-                documentData.officerInfo = JSON.parse(storedOfficerInfo);
-            }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        // Save officer information to local storage
-        function saveOfficerInfo() {
-            localStorage.setItem(OFFICER_INFO_STORAGE_KEY, JSON.stringify(documentData.officerInfo));
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
         }
+        .animate-slide-in-left { animation: slideInLeft 0.7s ease-out forwards; }
+        .animate-slide-in-up { animation: slideInUp 0.7s ease-out forwards; }
+        .animate-slide-in-right { animation: slideInRight 0.7s ease-out forwards; }
 
-
-        // Update accused sections based on count
-        function updateAccusedSections() {
-            const count = parseInt(document.getElementById('accusedCount').value) || 1;
-            const container = document.getElementById('accusedContainer');
-            container.innerHTML = '';
-
-            // Ensure we have enough accused objects
-            while (documentData.accused.length < count) {
-                documentData.accused.push({
-                    name: "", // Cleared default
-                    father: "", // Cleared default
-                    address: "", // Cleared default
-                    permanentAddress: "", // Cleared default
-                    age: "", // Cleared default
-                    mobile: "", // Cleared default
-                    personalSearch: documentData.personalSearchRemark,
-                    personToInform: "", // Cleared default
-                    height: "", // Added for conviction slip
-                    complexion: "", // Added for conviction slip
-                    education: "", // Added for conviction slip
-                    identificationMark: "" // Added for conviction slip
-                });
-            }
-
-            // Remove extra accused
-            documentData.accused = documentData.accused.slice(0, count);
-
-            // Create form sections for each accused
-            documentData.accused.forEach((accused, index) => {
-                const section = document.createElement('div');
-                section.className = 'accused-section';
-                section.innerHTML = `
-                    <div class="section-title">
-                        <h3>Accused #${index + 1}</h3>
-                    </div>
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" data-accused="${index}" data-field="name" value="${accused.name}" placeholder="Full Name">
-                    </div>
-                    <div class="form-group">
-                        <label>Father's Name</label>
-                        <input type="text" data-accused="${index}" data-field="father" value="${accused.father}" placeholder="Father's Name">
-                    </div>
-                    <div class="form-group">
-                        <label>Residential Address</label>
-                        <input type="text" data-accused="${index}" data-field="address" value="${accused.address}" placeholder="Residential Address">
-                    </div>
-                    <div class="form-group">
-                        <label>Permanent Address</label>
-                        <input type="text" data-accused="${index}" data-field="permanentAddress" value="${accused.permanentAddress}" placeholder="Permanent Address">
-                    </div>
-                    <div class="form-group">
-                        <label>Age & Mobile No.</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="number" data-accused="${index}" data-field="age" value="${accused.age}" placeholder="Age" style="flex: 1;">
-                            <input type="text" data-accused="${index}" data-field="mobile" value="${accused.mobile}" placeholder="Mobile Number" style="flex: 1;">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Personal Search Details (Override default if needed)</label>
-                        <input type="text" data-accused="${index}" data-field="personalSearch" value="${accused.personalSearch || documentData.personalSearchRemark}" placeholder="Personal Search Details">
-                    </div>
-                    <div class="form-group">
-                        <label>Person to Inform about Arrest</label>
-                        <input type="text" data-accused="${index}" data-field="personToInform" value="${accused.personToInform}" placeholder="Person to inform about arrest">
-                    </div>
-                `;
-                container.appendChild(section);
-            });
-
-            // Add event listeners for accused fields
-            document.querySelectorAll('#accusedContainer input').forEach(input => {
-                input.addEventListener('input', function() {
-                    const accusedIndex = this.getAttribute('data-accused');
-                    const field = this.getAttribute('data-field');
-                    documentData.accused[accusedIndex][field] = this.value;
-                    renderDocument();
-                });
-            });
-            renderDocument(); // Re-render document after updating accused sections
+        /* General fade-in */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
+        .animate-fade-in { animation: fadeIn 1s ease-out forwards; }
 
-        // Render the document preview with exact formatting
-        function renderDocument() {
-            const preview = document.getElementById('documentPreview');
-            const witnessFull = `${documentData.witnessName.trim()} ${documentData.witnessBeltNo.trim() ? 'Belt No. ' + documentData.witnessBeltNo.trim() : ''}`.trim();
-            const formattedDate = formatDate(documentData.documentDate);
-            const accusedCount = documentData.accused.length;
+        /* Applying delays to animations */
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+    </style>
 
-            // Generate accused details string for Kalandara (still including full details and still editable in Kalandra)
-            const accusedDetailsKalandra = documentData.accused.map((accused, idx) =>
-                `${idx+1}. <span class="editable-field" contenteditable="true" data-accused="${idx}" data-field="name">${accused.name}</span> S/o <span class="editable-field" contenteditable="true" data-accused="${idx}" data-field="father">${accused.father}</span>, R/o <span class="editable-field" contenteditable="true" data-accused="${idx}" data-field="address">${accused.address}</span>, Permanent Address -- <span class="editable-field" contenteditable="true" data-accused="${idx}" data-field="permanentAddress">${accused.permanentAddress}</span>, Age- <span class="editable-field" contenteditable="true" data-accused="${idx}" data-field="age">${accused.age}</span> yrs, Mobile No. <span class="editable-field" contenteditable="true" data-accused="${idx}" data-field="mobile">${accused.mobile}</span>`
-            ).join(', ');
-
-
-            // Generate accused details string for Witness Statement (now synced only)
-            const accusedDetailsWitness = documentData.accused.map((accused, idx) =>
-                `${idx+1}. <span class="sync-field">${accused.name}</span> S/o <span class="sync-field">${accused.father}</span>, R/o <span class="sync-field">${accused.address}</span>, Permanent Address -- <span class="sync-field">${accused.permanentAddress}</span>, Age- <span class="sync-field">${accused.age}</span> yrs, Mobile No. <span class="sync-field">${accused.mobile}</span>`
-            ).join(', ');
-
-            // Process incident details with placeholders for Kalandara
-            // The main incidentDetails text is now derived directly from documentData.incidentDetails (textarea)
-            // and its placeholders are replaced with editable spans.
-            let kalandaraIncidentText = documentData.incidentDetails
-                .replace(/\[WITNESS_INFO\]/g, `<span class="editable-field" contenteditable="true" data-field="witnessFull">${witnessFull}</span>`)
-                .replace(/\[PLACE_OF_INCIDENT\]/g, `<span class="editable-field" contenteditable="true" data-field="placeOfIncident">${documentData.placeOfIncident}</span>`)
-                .replace(/\[ACCUSED_DETAILS_KALANDRA\]/g, accusedDetailsKalandra)
-                .replace(/\[REASON\]/g, `<span class="editable-field" contenteditable="true" data-field="reason">${documentData.reason}</span>`)
-                .replace(/\[HOSPITAL\]/g, `<span class="editable-field" contenteditable="true" data-field="hospitalName">${documentData.hospitalName}</span>`)
-                .replace(/\[DD_NUMBER\]/g, `<span class="editable-field dd-number" contenteditable="true">${documentData.ddNumber}</span>`)
-                .replace(/\[DATE\]/g, `<span class="editable-field doc-date" contenteditable="true">${formattedDate}</span>`)
-                .replace(/\[ACCUSED_COUNT\]/g, `<span class="editable-field" contenteditable="true" data-field="accusedCount">${accusedCount}</span>`)
-                .replace(/\[PERSONAL_SEARCH_REMARK_KALANDRA\]/g, `<span class="editable-field" contenteditable="true" data-field="personalSearchRemark">${documentData.personalSearchRemark}</span>`);
-
-            // Construct the Witness Statement text with synced fields
-            let witnessStatementText = documentData.incidentDetails
-                .replace(/\[WITNESS_INFO\]/g, `<span class="sync-field">${witnessFull}</span>`) // Now sync-field
-                .replace(/\[PLACE_OF_INCIDENT\]/g, `<span class="sync-field">${documentData.placeOfIncident}</span>`) // Now sync-field
-                .replace(/\[ACCUSED_DETAILS_KALANDRA\]/g, accusedDetailsWitness) // Use witness specific accused details here, now sync-field
-                .replace(/\[REASON\]/g, `<span class="editable-field" contenteditable="true" data-field="reason">${documentData.reason}</span>`) // Now editable
-                .replace(/\[HOSPITAL\]/g, `<span class="sync-field">${documentData.hospitalName}</span>`) // Now sync-field
-                .replace(/\[DD_NUMBER\]/g, `<span class="sync-field dd-number">${documentData.ddNumber}</span>`) // Now sync-field
-                .replace(/\[DATE\]/g, `<span class="sync-field doc-date">${formattedDate}</span>`) // Now sync-field
-                .replace(/\[ACCUSED_COUNT\]/g, `<span class="sync-field">${accusedCount}</span>`) // Now sync-field
-                .replace(/\[PERSONAL_SEARCH_REMARK_KALANDRA\]/g, `<span class="sync-field">${documentData.personalSearchRemark}</span>`); // Now sync-field
-
-
-            let htmlContent = `
-                <div class="legal-document">
-                    <div class="legal-header">
-                        <div class="court-name underline">${documentData.courtName}</div>
-                        <div class="document-title">FIR/DD. No. <span class="sync-field">${documentData.ddNumber}</span>, DATED- <span class="sync-field">${formattedDate}</span> U/S-126/170 BNSS, ${documentData.policeStation}</div>
-                    </div>
-
-                    <div class="legal-section">
-                        <p><strong>S/T</strong>- ${documentData.officerInfo.name}, No. ${documentData.officerInfo.number}, PIS NO. ${documentData.officerInfo.pis}, ${documentData.policeStation}</p>
-            `;
-
-            // Add accused information for Kalandara (still editable here as per original)
-            documentData.accused.forEach((accused, index) => {
-                htmlContent += `
-                    <p><strong>S/V: - ${index + 1}.</strong><span class="editable-field" contenteditable="true" data-accused="${index}" data-field="name">${accused.name}</span> S/o <span class="editable-field" contenteditable="true" data-accused="${index}" data-field="father">${accused.father}</span>, R/o <span class="editable-field" contenteditable="true" data-accused="${index}" data-field="address">${accused.address}</span>, Permanent Address -- <span class="editable-field" contenteditable="true" data-accused="${index}" data-field="permanentAddress">${accused.permanentAddress}</span>, Age- <span class="editable-field" contenteditable="true" data-accused="${index}" data-field="age">${accused.age}</span> yrs, Mobile No. <span class="editable-field" contenteditable="true" data-accused="${index}" data-field="mobile">${accused.mobile}</span></p>
-                `;
-            });
-
-            htmlContent += `
-                    <div class="legal-header underline">KALANDRA U/S 126/170 BNSS</div>
-
-                    <div class="legal-section hindi-text">
-                        <p>${kalandaraIncidentText}</p>
-                    </div>
-
-                    <div class="legal-header underline">ATTACHED DOCUMENTS : -</div>
-
-                    <table class="legal-table documents-table">
-                        <tr>
-                            <th>S. No</th>
-                            <th>Type of Document</th>
-                            <th>No of Page</th>
-                        </tr>
-            `;
-
-            // Add attached documents
-            documentData.attachedDocuments.forEach((doc, index) => {
-                htmlContent += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${doc.type}</td>
-                        <td><span class="editable-field" contenteditable="true" data-doc-index="${index}">${doc.pages}</span></td>
-                    </tr>
-                `;
-            });
-
-            htmlContent += `
-                    </table>
-
-                    <div class="signature">
-                        <p>${documentData.officerInfo.name}</p>
-                        <p>NO. ${documentData.officerInfo.number}</p>
-                        <p>PIS NO ${documentData.officerInfo.pis}</p>
-                        <p>${documentData.policeStation}</p>
-                        <p>Dt. <span class="sync-field">${formattedDate}</span></p>
-                    </div>
-            `;
-
-            // Generate sections for each accused (Arrest Memo, Personal Search, Conviction Slip)
-            documentData.accused.forEach((accused, index) => {
-                htmlContent += `
-                    <div class="page-break">
-                        <div class="document-title">FIR/DD. No. <span class="sync-field dd-number">${documentData.ddNumber}</span> Dated <span class="sync-field doc-date">${formattedDate}</span> U/S 126/170 BNSS</div>
-                        <div class="document-title">P.S./थाना <span class="sync-field">${documentData.policeStation.replace(', Distt. Rohini, Delhi', '')}</span> Distt/जिला Rohini, Delhi/दिल्ली</div>
-
-                        <div class="legal-header underline">ARREST MEMO</div>
-                        <div class="legal-header">गिरफ्तारी पत्र</div>
-                        <p style="text-align: center; margin-bottom: 20px;">As per directions of Hon'ble Supreme Court of India (माननीय उच्चतम न्यायलय भारत के निर्देशानुसार)</p>
-                        <table class="legal-table">
-                            <tr>
-                                <td width="40%">1. Name with Alias and Parentage of <br>the Arrestee.<br>गिरफ्तार व्यक्ति का नाम, उपनाम एवं पिता का नाम</td>
-                                <td><span class="sync-field">${accused.name}</span> S/o <span class="sync-field">${accused.father}</span>, Age- <span class="sync-field">${accused.age}</span> yrs</td>
-                            </tr>
-                            <tr>
-                                <td>3. Permanent Address of the Arrestee<br>गिरफ्तार व्यक्ति का स्थायी पता</td>
-                                <td><span class="sync-field">${accused.permanentAddress}</span></td>
-                            </tr>
-                            <tr>
-                                <td>4. FIR/DD. No. Sec Of Law,<br>ए.फ.आई.आर/डीडी. नं. तथा विधि दफा</td>
-                                <td>DD No. <span class="sync-field dd-number">${documentData.ddNumber}</span> U/S 126/170 BNSS</td>
-                            </tr>
-                            <tr>
-                                <td>5. Place of Arrest.<br>गिरफ्तari का स्थान</td>
-                                <td><span class="editable-field" contenteditable="true" data-field="arrestMemoPlaceOfArrest">${documentData.arrestMemoPlaceOfArrest}</span></td>
-                            </tr>
-                            <tr>
-                                <td>6. Date & Time of Arrest.<br>गिरफ्तari का समय व तारीख</td>
-                                <td>Date: <span class="editable-field arrest-date" contenteditable="true">${formattedDate}</span> Time: <span class="editable-field" contenteditable="true">${documentData.timeOfArrest}</span></td>
-                            </tr>
-                            <tr>
-                                <td>7. Name, Address & Tel. No. of person<br>Whomsoever to convey the Arrest<br>गिरफ्तari के संदर्भ में जिसे सूचित किया जाना है (नाम, पता और फोन नंबर)</td>
-                                <td><span class="sync-field">${accused.personToInform}</span></td>
-                            </tr>
-                            <tr>
-                                <td>8. Name, Rank & No. of the officer who. <br>made the Arrest.<br>गिरफ्तari करने वाले अधिकारी का नाम, रैंक एवं नं.</td>
-                                <td><span class="sync-field">${documentData.officerInfo.name}</span> No. <span class="sync-field">${documentData.officerInfo.number}</span></td>
-                            </tr>
-                            <tr>
-                                <td>9. Reasons of Arrest (use separate<br>sheet to record relevant details)</td>
-                                <td><span class="editable-field" contenteditable="true" data-field="arrestReasons">${documentData.arrestReasons}</span></td>
-                            </tr>
-                            <tr>
-                                <td>10. Grounds of Arrest (Use separate sheet to be duly signed by the arrestee to record his consent there on)</td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td>11. Weather 'Grounds of Arrest' has<br>been conveyed to the accused or not.</td>
-                                <td>Yes/No</td>
-                            </tr>
-                        </table>
-
-                        <div class="legal-section" style="display: flex; justify-content: flex-end; margin-top: 30px; gap: 50px;">
-                            <div style="text-align: right;">
-                                <p style="margin-bottom: 30px;">Signature of Arrestee / गिरफ्तार व्यक्ति के हस्ताक्षर</p>
-                                <p>Signature of the IO / जॉच अधिकारी के हस्ताक्षर</p>
-                            </div>
-                        </div>
-
-                        <div class="signature">
-                            <p>PS/थाना <span class="sync-field">${documentData.policeStation}</span> Delhi/दिल्ली</p>
-                            <p>Dt. / तिथि <span class="sync-field doc-date">${formattedDate}</span></p>
-                        </div>
-                        <div class="legal-section">
-                            <p><strong>Witness / गवाह</strong></p>
-                            <p>1. <span class="sync-field">${witnessFull}</span></p>
-                            <p>2.</p>
-                            <p>3.</p>
-                        </div>
-                    </div>
-
-                    <div class="page-break">
-                        <div class="document-title">FIR/DD. No. <span class="sync-field">${documentData.ddNumber}</span> DATE <span class="sync-field">${formattedDate}</span> U/S 126/170 BNSS PS <span class="sync-field">${documentData.policeStation.replace('PS ', '').replace(', Distt. Rohini, Delhi', '')}</span> DISTT Rohini, DELHI.</div>
-                        <div class="legal-header">Personal Search Memo</div>
-                        <div class="legal-section">
-                            <p>In the presence of the following witnesses the personal search of <span class="sync-field">${accused.name}</span> S/o <span class="sync-field">${accused.father}</span>, R/o <span class="sync-field">${accused.address}</span> Was conducted as per law under the previous of Section 49 BNSS and following articles have been recovered from his/him possession and same have been taken into the police Possession, through this memo.</p>
-                            <p style="margin-top: 20px; margin-bottom: 30px;"><span class="sync-field">${accused.personalSearch || documentData.personalSearchRemark}</span></p>
-                            <p>……………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………..…………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………..</p>
-                            <p style="margin-top: 50px;">Witness: <span class="sync-field">${witnessFull}</span></p>
-                            <div style="text-align: right;"> <!-- This div causes the subsequent lines to right-align -->
-                                <p>${documentData.officerInfo.name}</p>
-                                <p>NO ${documentData.officerInfo.number}</p>
-                                <p>PIS NO ${documentData.officerInfo.pis}</p>
-                                <p>P.S. ${documentData.policeStation}</p>
-                                <p>Dt. <span class="sync-field">${formattedDate}</span></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="page-break">
-                        <!-- Conviction Slip Start -->
-                        <p>FIR/DD. No.&nbsp;<span class="sync-field">${documentData.ddNumber}</span>&nbsp;DATE&nbsp;<span class="sync-field">${formattedDate}</span>&nbsp;U/S 126/170 BNSS PS <span class="sync-field">${documentData.policeStation.replace(', Distt. Rohini, Delhi', '')}</span>, Distt. Rohini, Delhi.</p>
-                        <div class="legal-header">सिद्धदोषन पत्र</div>
-                        <div class="legal-header underline">CONVICTION SLIP</div>
-                        <p style="text-align: center; margin: 10px 0;">पुलिस थाना <span class="sync-field">${documentData.policeStation.replace(', Distt. Rohini, Delhi', '')}</span> जिला ROHINI</p>
-
-                        <table class="legal-table">
-                            <tr>
-                                <th style="width: 30%;">अभियुक्त का नाम, पता तथा विवरण<br>Accused Name, Address & Details</th>
-                                <th style="width: 20%;">गिरफ्तari की तिथि<br>Date of Arrest</th>
-                                <th style="20%;">अपराध धारान्तर्गत<br>Section of Law</th>
-                                <th style="width: 30%;">न्यायालय का अंतिम आदेश<br>Final Order of Court</th>
-                            </tr>
-                            <tr>
-                                <td class="conviction-accused-detail">
-                                    <span class="sync-field">${accused.name}</span>&nbsp;S/o&nbsp;<span class="sync-field">${accused.father}</span>,<br>
-                                    R/o&nbsp;<span class="sync-field">${accused.address}</span>,<br>
-                                    Age-&nbsp;<span class="sync-field">${accused.age}</span>&nbsp;yrs,<br>
-                                    Height –&nbsp;<span class="sync-field">${accused.height}</span>,<br>
-                                    Complexation –&nbsp;<span class="sync-field">${accused.complexion}</span>,<br>
-                                    Education –&nbsp;<span class="sync-field">${accused.education}</span>,<br>
-                                    Identification mark –&nbsp;<span class="sync-field">${accused.identificationMark}</span>
-                                </td>
-                                <td><span class="sync-field">${formattedDate}</span></td>
-                                <td>126/170 BNSS</td>
-                                <td></td>
-                            </tr>
-                        </table>
-
-                        <div style="text-align: left; margin-top: 20px;">
-                            <p>${documentData.officerInfo.name},</p>
-                            <p>NO. ${documentData.officerInfo.number},</p>
-                            <p>PIS NO ${documentData.officerInfo.pis},</p>
-                            <p>${documentData.policeStation},</p>
-                            <p>Dt.&nbsp;<span class="sync-field">${formattedDate}</span></p>
-                        </div>
-                    </div>
-                `;
-            });
-
-            // Witness Statement Section
-            htmlContent += `
-                    <div class="page-break">
-                        <div class="legal-header">Statement of <span class="sync-field">${witnessFull}</span></div>
-                        <div class="legal-header underline">STATEMENT OF WITNESS</div>
-                        <div class="legal-section hindi-text">
-                            <p>${witnessStatementText}</p>
-                        </div>
-
-                        <div class="signature">
-                            <p>${documentData.officerInfo.name}</p>
-                            <p>NO. ${documentData.officerInfo.number}</p>
-                            <p>PIS NO ${documentData.officerInfo.pis}</p>
-                            <p>${documentData.policeStation}</p>
-                            <p>Dt. <span class="sync-field">${formattedDate}</span></p>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            preview.innerHTML = htmlContent;
-
-            // Make editable fields interactive (only actual editable fields)
-            preview.querySelectorAll('.editable-field').forEach(field => {
-                field.addEventListener('input', function() {
-                    const dataField = this.getAttribute('data-field');
-                    const accusedIndex = this.getAttribute('data-accused');
-
-                    // Handle DD Number and Date syncing
-                    if (field.classList.contains('dd-number')) {
-                        documentData.ddNumber = this.innerText;
-                        // Update all elements with this class
-                        preview.querySelectorAll('.dd-number').forEach(span => {
-                            if (span !== this) span.innerText = this.innerText;
-                        });
-                        document.getElementById('ddNumber').value = this.innerText; // Sync back to form input
-                    } else if (field.classList.contains('doc-date') || field.classList.contains('arrest-date')) {
-                        const newDateText = this.innerText.trim();
-                        let parts = newDateText.includes('/') ? newDateText.split('/') : newDateText.split('.');
-                        if (parts.length === 3) {
-                            let [day, month, year] = parts;
-                            day = day.padStart(2, '0');
-                            month = month.padStart(2, '0');
-                            if (year.length === 2) {
-                                year = (parseInt(year) <= 25 ? '20' + year : '19' + year);
-                            }
-                            const isoDate = `${year}-${month}-${day}`;
-                            if (!isNaN(Date.parse(isoDate))) {
-                                documentData.documentDate = isoDate;
-                            }
-                        }
-                        // Update all elements with these classes
-                        preview.querySelectorAll('.doc-date').forEach(span => {
-                            if (span !== this) span.innerText = this.innerText;
-                        });
-                        preview.querySelectorAll('.arrest-date').forEach(span => {
-                            if (span !== this) span.innerText = this.innerText;
-                        });
-                        document.getElementById('documentDate').value = documentData.documentDate; // Sync back to form input
-                    }
-
-                    // Handle specific data fields
-                    if (dataField === 'personalSearchRemark') {
-                        documentData.personalSearchRemark = this.innerText;
-                        document.getElementById('personalSearchRemark').value = this.innerText;
-                    } else if (dataField === 'officerName') {
-                        documentData.officerInfo.name = this.innerText;
-                        document.getElementById('officerName').value = this.innerText;
-                        saveOfficerInfo();
-                    } else if (dataField === 'officerPIS') {
-                        documentData.officerInfo.pis = this.innerText;
-                        document.getElementById('officerPIS').value = this.innerText;
-                        saveOfficerInfo();
-                    } else if (dataField === 'officerNumber') {
-                        documentData.officerInfo.number = this.innerText;
-                        document.getElementById('officerNumber').value = this.innerText;
-                        saveOfficerInfo();
-                    }
-                    else if (dataField === 'arrestMemoPlaceOfArrest') {
-                        documentData.arrestMemoPlaceOfArrest = this.innerText;
-                    } else if (dataField === 'arrestMemoReasonOfArrest') {
-                        documentData.arrestMemoReasonOfArrest = this.innerText;
-                    } else if (dataField === 'arrestReasons') { // New handler for arrestReasons
-                        documentData.arrestReasons = this.innerText;
-                    }
-                    else if (accusedIndex !== null && dataField) {
-                        documentData.accused[accusedIndex][dataField] = this.innerText;
-                        const inputField = document.querySelector(`input[data-accused="${accusedIndex}"][data-field="${dataField}"]`);
-                        if(inputField) inputField.value = this.innerText;
-                    } else if (dataField === 'witnessFull') {
-                        const [namePart, beltPart] = this.innerText.split('Belt No.');
-                        documentData.witnessName = namePart.trim();
-                        documentData.witnessBeltNo = beltPart ? beltPart.trim() : '';
-                        document.getElementById('witnessName').value = documentData.witnessName;
-                        document.getElementById('witnessBeltNo').value = documentData.witnessBeltNo;
-                    } else if (dataField === 'placeOfIncident') {
-                        documentData.placeOfIncident = this.innerText;
-                        document.getElementById('placeOfIncident').value = this.innerText;
-                    } else if (dataField === 'hospitalName') {
-                        documentData.hospitalName = this.innerText;
-                        document.getElementById('hospitalName').value = this.innerText;
-                    } else if (dataField === 'reason') { // This now handles the editable reason in preview
-                        documentData.reason = this.innerText;
-                        document.getElementById('reason').value = this.innerText;
-                    }
-                    // For attached documents pages
-                    const docIndex = this.getAttribute('data-doc-index');
-                    if (docIndex !== null) {
-                        documentData.attachedDocuments[docIndex].pages = this.innerText;
-                    }
-                    renderDocument(); // Re-render to ensure all syncs happen immediately
-                });
-            });
-        }
-
-        // Format date for display (DD.MM.YY)
-        function formatDate(dateString) {
-            if (!dateString) return '_________';
-            const date = new Date(dateString);
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = String(date.getFullYear()).slice(-2);
-            return `${day}.${month}.${year}`;
-        }
-
-        // Export to Word
-        function exportToWord() {
-            const previewContent = document.getElementById('documentPreview').innerHTML;
-            const accusedName = documentData.accused[0]?.name || 'Document';
-            const fileName = `Kalndara 126-170 BNSS ${accusedName}.doc`;
-
-            const header = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-                    <meta name="ProgId" content="Word.Document">
-                    <meta name="Generator" content="Microsoft Word 15">
-                    <meta name="Originator" content="Microsoft Word 15">
-                    <style>
-                        body {
-                            font-family: 'Times New Roman', serif;
-                            font-size: 12pt;
-                            line-height: 1.6;
-                        }
-                        .underline { text-decoration: underline; }
-                        table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
-                        td, th { border: 1px solid #000; padding: 8px; vertical-align: top; }
-                        .double-border { border-bottom: 3px double #000; }
-                        .court-name {
-                            font-size: 18pt;
-                            text-align: center;
-                            font-weight: bold;
-                            text-transform: uppercase;
-                        }
-                        .document-title {
-                            text-align: center;
-                            font-weight: bold;
-                            margin: 15px 0;
-                        }
-                        .legal-header {
-                            text-align: center;
-                            font-weight: bold;
-                            font-size: 14pt;
-                            margin: 20px 0;
-                        }
-                        .hindi-text {
-                            font-family: 'Mangal', 'Arial Unicode MS', sans-serif;
-                            font-size: 14pt;
-                        }
-                        .signature {
-                            margin-top: 50px;
-                            text-align: right;
-                            padding-right: 50px;
-                        }
-                        .page-break {
-                            page-break-before: always;
-                            margin-top: 30px;
-                            padding-top: 20px;
-                        }
-                        /* Editable fields should not show their background/border in Word */
-                        .editable-field {
-                            background-color: transparent;
-                            border-bottom: none; /* Crucial for removing underline on export */
-                            border-radius: 0;
-                            min-width: unset;
-                            display: inline;
-                            padding: 0;
-                        }
-                        /* Sync-only fields should also have no border/background on export */
-                        .sync-field {
-                            background-color: transparent;
-                            border-bottom: none;
-                            border-radius: 0;
-                            min-width: unset;
-                            display: inline;
-                            padding: 0;
-                        }
-                        .conviction-accused-detail {
-                            padding-bottom: 2em; /* Ensure same spacing in Word export */
-                        }
-                        /* Right alignment for specific sections */
-                        .right-align-block {
-                            text-align: right;
-                        }
-                    </style>
-                </head>
-                <body>
-            `;
-
-            const footer = `</body></html>`;
-            const source = header + previewContent + footer;
-
-            const blob = new Blob([source], {type: 'application/msword;charset=utf-8'});
-            const link = document.createElement('a');
-
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-        }
-
-        // Print document (now also used for PDF export)
-        function printDocument() {
-            window.print();
-        }
-        
-  function enableBasicSiteProtection() {
-    // 🔒 Block right-click
-    document.addEventListener('contextmenu', function (event) {
-      event.preventDefault();
-    });
-
-    // 🔒 Disable common devtools shortcuts
-    document.addEventListener('keydown', function (e) {
-      if (
-        e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && ['I', 'C', 'J', 'U'].includes(e.key)) ||
-        (e.ctrlKey && e.key === 'U')
-      ) {
-        e.preventDefault();
-        return false;
-      }
-    });
-
-    // 🔒 Prevent frame embedding
-    if (window.top !== window.self) {
-      window.top.location = window.self.location;
-    }
-
-    // 🔒 Disable text selection and dragging
-    const style = document.createElement('style');
-    style.innerHTML = `
-      body {
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
-      }
-      img {
-        pointer-events: none;
-        -webkit-user-drag: none;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  // Call the protection function as soon as the page loads
-  window.onload = enableBasicSiteProtection;
-    </script>
 </body>
 </html>
